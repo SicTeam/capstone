@@ -1,0 +1,3 @@
+/home/cody/SicDetect/capstone/tracking/CMakeFiles/edit_cache.dir
+/home/cody/SicDetect/capstone/tracking/CMakeFiles/rebuild_cache.dir
+/home/cody/SicDetect/capstone/tracking/CMakeFiles/detect.dir
