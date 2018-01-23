@@ -113,6 +113,17 @@ int Track::kcf(char * vid)
 //Task:
 //Input:
 //Output:
+int Track::kcf()
+{
+
+    return 0;
+}
+
+
+
+//Task:
+//Input:
+//Output:
 void Track::display()
 {
 

@@ -13,11 +13,17 @@ int main(int argc, char ** argv)
     Track track;
     Detect detect;
 
-    track.kcf(argv[1]);
-    //cout << "Begin" << endl;
+    cout << "OpenCV Version: " << CV_VERSION << endl;
 
-    //track.display();
-    //detect.display();
+    if(argv[1]){
+        track.kcf(argv[1]);
+    }
+    else{
+        track.kcf();
+        //cout << "Begin" << endl;
 
+        track.display();
+        detect.display();
+    }
     return 0;
 }
