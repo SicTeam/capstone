@@ -13,8 +13,15 @@ int main(int argc, char ** argv)
     Track track;
     Detect detect;
 
-    track.kcf(argv[1]);
+    //VideoCapture video(0);	
+
+    //track.kcf(argv[1]);
+
+    track.kcf();
+
     //cout << "Begin" << endl;
+
+    //cout <<"CV version" << CV_VERSION << endl;
 
     //track.display();
     //detect.display();

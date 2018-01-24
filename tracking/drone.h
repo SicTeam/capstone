@@ -27,14 +27,14 @@ class Detect
 };
 
 
-
 //Task:
 class Track
 {
     public:
         Track();
         ~Track();
-        int kcf(char * vid);
+        //int kcf(char * vid);
+	int kcf();
         void display();
 
     private:
