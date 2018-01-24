@@ -1,4 +1,4 @@
-# Install script for directory: /home/cody/SicDetect/capstone/tracking
+# Install script for directory: /home/khuong/capstone/tracking
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -40,5 +40,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/cody/SicDetect/capstone/tracking/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/khuong/capstone/tracking/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
