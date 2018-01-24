@@ -6,5 +6,5 @@ project(Drone_Detect)
 find_package(OpenCV REQUIRED)
 
 #Detection
-add_executable(detect drone_detect.cpp drone_track.cpp drone_main.cpp)
+add_executable(detect drone_track.cpp drone_main.cpp)
 target_link_libraries(detect ${OpenCV_LIBS})

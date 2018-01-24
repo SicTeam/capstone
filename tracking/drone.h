@@ -15,17 +15,6 @@ using namespace std;
         ( std::ostringstream() << std::dec << x ) ).str()
 
 
-//Task:
-class Detect
-{
-    public:
-        Detect();
-        ~Detect();
-        void display();
-    private:
-
-};
-
 
 //Task:
 class Track
@@ -33,13 +22,9 @@ class Track
     public:
         Track();
         ~Track();
-<<<<<<< HEAD
+        int detect();
         int kcf(char * vid);
         int kcf();
-=======
-        //int kcf(char * vid);
-	int kcf();
->>>>>>> 0e785f4715da75af9112b198c486a8653b24edaa
         void display();
 
     private:
