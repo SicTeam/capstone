@@ -28,11 +28,12 @@ Track::~Track()
 //Task:
 //Input:
 //Output:
-int Track::kcf(char * vid)
+//int Track::kcf(char * vid)
+int Track::kcf()
 {
     //create tracker
     string trackerType = "KCF";
-    string video_cap = vid;
+    //string video_cap = vid;
     Ptr<Tracker> tracker;
     Mat frame; //holds video frame
 
@@ -45,8 +46,12 @@ int Track::kcf(char * vid)
         tracker = TrackerKCF::create();
     }
     #endif
-    //Read video
-    VideoCapture video(video_cap);
+
+    //Read video from a video clip
+    //VideoCapture video(video_cap);
+
+    //Read video from a camera
+    VideoCapture video(0);
 
     //Exit if video is not opened
     if(!video.isOpened())
