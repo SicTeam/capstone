@@ -3,11 +3,23 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
 
 mavros_msgs::State current_state;
 
 void state_cb(const mavros_msgs::State::ConstPtr& msg) {
     current_state = *msg;
+}
+
+void image_callback_left(const sensor_msgs::ImageConstPtr& msg)
+{
+    ROS_INFO("Received left image with size: %i x %i", msg->width, msg->height);
+}
+
+void image_callback_right(const sensor_msgs::ImageConstPtr& msg)
+{
+    ROS_INFO("Received right image with size: %i x %i", msg->width, msg->height);
 }
 
 int main(int argc, char **argv) {
@@ -17,6 +29,10 @@ int main(int argc, char **argv) {
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
             ("/sd5_1/mavros/state", 10, state_cb);
+    ros::Subscriber left_sub = nh.subscribe("/sd5_1/camera_sd5_left/image_raw",
+            2, image_callback_left);
+    ros::Subscriber right_sub = nh.subscribe("/sd5_1/camera_sd5_right/image_raw",
+            2, image_callback_right);
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("/sd5_1/mavros/setpoint_position/local", 10);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>

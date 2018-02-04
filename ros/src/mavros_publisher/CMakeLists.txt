@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     genmsg
     mavros_msgs
+    cv_bridge
+    image_transport
 )
 
 ## System dependencies are found with CMake's conventions
