@@ -107,12 +107,14 @@ int Track::detect()
     CascadeClassifier drone_cascade;
     //String drone_cascade_name = "/home/cody/Desktop/Training/data/cascade.xml";
     String drone_cascade_name = "cascade.xml";
-    String image("test/test_image/1.jpeg");
+    //String image("test/test_image/1.jpeg");
+    VideoCapture video("test/Video_1.avi");
     vector<Rect> drones;
     Mat frame;
     Mat frame_gray;
 
-    frame = imread( image, IMREAD_COLOR);
+    video >> frame;
+    //frame = imread( image, IMREAD_COLOR);
 
     if(!drone_cascade.load(drone_cascade_name)) 
     {
@@ -246,6 +248,7 @@ int Track::kcf()
 {
     //create tracker
     string trackerType = "MEDIANFLOW";
+    //String trackerType = "KCF";
     Ptr<Tracker> tracker;
     String drone_cascade_name = "face.xml";//swap with the drone training data
     CascadeClassifier drone_cascade;
@@ -254,8 +257,8 @@ int Track::kcf()
 
     if( !drone_cascade.load( drone_cascade_name ) )
     { 
-	cout <<"--(!)Error loading drone cascade\n" << endl; 
-	return 1;
+	    cout <<"--(!)Error loading drone cascade\n" << endl; 
+	    return 1;
     }
 
     #if (CV_MINOR_VERSION < 3)
@@ -319,6 +322,7 @@ int Track::kcf()
                 #endif
 
             tracker->init(frame,new_bbox);
+            rectangle(frame, new_bbox, Scalar(225, 0, 0), 2, 1);
             trackFail = false;
         }
 
@@ -350,7 +354,7 @@ int Track::kcf()
             equalizeHist( frame_gray, frame_gray );
 
             //-- Detect drones
-            drone_cascade.detectMultiScale( frame_gray, drones, 1.1, 1, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+            drone_cascade.detectMultiScale( frame_gray, drones, 1.05, 3, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
             if(drones.size() == 0)
             {
                 putText(frame, "Can't find the object", Point(100, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
