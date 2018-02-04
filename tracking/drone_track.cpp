@@ -29,6 +29,39 @@ Track::~Track()
 //Output:
 int Track::detect()
 {
+    CascadeClassifier drone_cascade;
+    //String drone_cascade_name = "/home/cody/Desktop/Training/data/cascade.xml";
+    String drone_cascade_name = "cascade.xml";
+    String image("test/test_image/1.jpeg");
+    vector<Rect> drones;
+    Mat frame;
+    Mat frame_gray;
+
+    frame = imread( image, IMREAD_COLOR);
+
+    if(!drone_cascade.load(drone_cascade_name)) 
+    {
+        cout << "Error loading drone cascade\n";
+        return -1;
+    }
+
+    cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
+    equalizeHist(frame_gray, frame_gray);
+
+    //detect drone
+    drone_cascade.detectMultiScale(frame_gray, drones, 1.05, 4, 0|CASCADE_SCALE_IMAGE, Size(30, 30));
+
+    cout << "Objects Detected: " << drones.size() << endl;
+
+    for(size_t i = 0; i < drones.size(); ++i)
+    {
+        Point center(drones[i].x + drones[i].width/2, drones[i].y + drones[i].height/2);
+        rectangle(frame, drones[i], Scalar(225,0,0),2,8);
+    }
+
+    namedWindow("Drone Detect", WINDOW_AUTOSIZE);
+    imshow("Drone Detect", frame);
+    waitKey(0);
 
     return 0;
 }
@@ -42,7 +75,7 @@ int Track::kcf(char * vid)
 {
     //create tracker
     string trackerType = "KCF";
-    //string video_cap = vid;
+    string video_cap = vid;
     Ptr<Tracker> tracker;
     Mat frame; //holds video frame
 
@@ -57,7 +90,7 @@ int Track::kcf(char * vid)
     #endif
 
     //Read video from a video clip
-    VideoCapture video(vid);
+    VideoCapture video(video_cap);
 
     //Exit if video is not opened
     if(!video.isOpened())
