@@ -23,12 +23,89 @@ Track::~Track()
 
 }
 
+<<<<<<< HEAD
+=======
+int Track::detect(int &x,int &y,int &width, int &height)
+{
+
+	int foundObj = 0;
+
+	String drone_cascade_name = "face.xml";//swap with the drone training data
+	CascadeClassifier drone_cascade;
+	Mat frame;
+
+        if( !drone_cascade.load( drone_cascade_name ) )
+	{ 
+		cout <<"--(!)Error loading drone cascade\n" << endl; 
+		return 1;
+       	}
+
+	VideoCapture video_2(0);
+
+    	//Read first frame
+    	video_2 >> frame;
+	
+	while(video_2.read(frame))
+	{
+
+        	if( frame.empty() )
+        	{
+            	cout << " --(!) No captured frame -- Break!" << endl;
+            	break;
+        	}
+
+		//function from here
+
+    		std::vector<Rect> drones;
+    		Mat frame_gray;
+
+    		cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
+    		equalizeHist( frame_gray, frame_gray );
+
+    		//-- Detect drones
+    		drone_cascade.detectMultiScale( frame_gray, drones, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+
+		imshow("Detect",frame);
+
+		if(drones.size() == 0)
+		{
+			cout << "Can't find the object" << endl;
+		        break;	
+		}
+
+		else
+		{
+    			x = drones[0].x; 
+    			y = drones[0].y;
+   			width = drones[0].width;
+    			height = drones[0].height;
+			video_2.release();
+			if(!video_2.isOpened())
+			{
+				cout<<"Video is closed in detection" << endl;
+			}
+			return 1;
+		}
+
+        	char c = (char)waitKey(10);
+        	if( c == 27 ) { break; } // escape
+	}
+
+	video_2.release();
+	if(!video_2.isOpened())
+	{
+		cout<<"Video is closed in detection" << endl;
+	}
+	return 0;
+}
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
 
 //Task:
 //Input:
 //Output:
 int Track::detect()
 {
+<<<<<<< HEAD
     CascadeClassifier drone_cascade;
     //String drone_cascade_name = "/home/cody/Desktop/Training/data/cascade.xml";
     String drone_cascade_name = "cascade.xml";
@@ -68,6 +145,11 @@ int Track::detect()
 
 
 
+=======
+    return 0;
+}
+
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
 //Task:   Allows tracking of object through video passed in
 //Input:  Takes in video stored in testing directory
 //Output: Displays video frame by frame while tracking selected object
@@ -75,7 +157,11 @@ int Track::kcf(char * vid)
 {
     //create tracker
     string trackerType = "KCF";
+<<<<<<< HEAD
     string video_cap = vid;
+=======
+    //string video_cap = vid;
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
     Ptr<Tracker> tracker;
     Mat frame; //holds video frame
 
@@ -89,8 +175,21 @@ int Track::kcf(char * vid)
     }
     #endif
 
+<<<<<<< HEAD
     //Read video from a video clip
     VideoCapture video(video_cap);
+=======
+    int x,y,width,height,getInfo;//parameter for the box
+
+    /*getInfo = detect(x,y,width,height);
+    if(getInfo == 0)
+    	return 1;
+    cout << "Found the para for object:  " << x << "  " << y << "  " << width <<"  " << height << endl;
+    */
+
+    //Read video from a video clip
+    VideoCapture video(vid);
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
 
     //Exit if video is not opened
     if(!video.isOpened())
@@ -103,11 +202,20 @@ int Track::kcf(char * vid)
     video >> frame;
     
     //Define initial bounding box
+<<<<<<< HEAD
     Rect2d bbox(287, 23, 86, 320);
+=======
+    Rect2d bbox(150, 50, 100, 300);
+    //Rect2d bbox(x,y,width,height);
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
 
     if(bbox.width==0 || bbox.height==0)
         return 1;
 
+<<<<<<< HEAD
+=======
+    //comment this out to not choose the box with mouse
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
     bbox = selectROI(frame, false);
     tracker->init(frame, bbox);
 
@@ -126,7 +234,11 @@ int Track::kcf(char * vid)
         {
             //Tracking success: draw tracked object
             rectangle(frame, bbox, Scalar(225, 0, 0), 2, 1);
+<<<<<<< HEAD
             //(x-1/2 height, x + 1/2 width) for middle of rectangle
+=======
+            //(x+1/2 height, x + 1/2 width) for middle of rectangle
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
         }
         else
         {
@@ -160,10 +272,25 @@ int Track::kcf(char * vid)
 int Track::kcf()
 {
     //create tracker
+<<<<<<< HEAD
     string trackerType = "KCF";
     //string video_cap = vid;
     Ptr<Tracker> tracker;
     Mat frame; //holds video frame
+=======
+    string trackerType = "MEDIANFLOW";
+    Ptr<Tracker> tracker;
+    String drone_cascade_name = "face.xml";//swap with the drone training data
+    CascadeClassifier drone_cascade;
+    Mat frame; //holds video frame
+    bool trackFail = false;
+
+    if( !drone_cascade.load( drone_cascade_name ) )
+    { 
+	cout <<"--(!)Error loading drone cascade\n" << endl; 
+	return 1;
+    }
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
 
     #if (CV_MINOR_VERSION < 3)
     {
@@ -175,6 +302,18 @@ int Track::kcf()
     }
     #endif
 
+<<<<<<< HEAD
+=======
+    //Define initial bounding box
+
+    int x,y,width,height,getInfo;//parameter for the box
+
+    getInfo = detect(x,y,width,height);
+    if(getInfo == 0)
+    	return 1;
+    //cout << "Found the para for object:  " << x << "  " << y << "  " << width <<"  " << height << endl;
+
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
     //Read video from a camera
     VideoCapture video(0);
 
@@ -187,23 +326,61 @@ int Track::kcf()
 
     //Read first frame
     video >> frame;
+<<<<<<< HEAD
     
     //Define initial bounding box
     Rect2d bbox(287, 23, 86, 320);
+=======
+
+    Rect2d bbox(x,y,width,height);
+
+    //Rect2d bbox(287, 23, 86, 320);
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
 
     if(bbox.width==0 || bbox.height==0)
         return 1;
 
+<<<<<<< HEAD
     bbox = selectROI(frame, false);
+=======
+    //bbox = selectROI(frame, false);
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
     tracker->init(frame, bbox);
 
     while(video.read(frame)) 
     {
+<<<<<<< HEAD
+=======
+
+	Rect2d new_bbox(bbox.x,bbox.y,bbox.width,bbox.height);
+
+	if(trackFail)
+	{
+            	putText(frame, "Tracking re-initting", Point(300, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
+    		#if (CV_MINOR_VERSION < 3)
+    		{
+       	 		tracker = Tracker::create(trackerType);
+    		}
+    		#else
+    		{
+        		tracker = TrackerKCF::create();
+    		}
+    		#endif
+
+		tracker->init(frame,new_bbox);
+		trackFail = false;
+	}
+
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
         //Start timer
         double timer = (double)getTickCount();
         
         //Update tracking result
+<<<<<<< HEAD
         bool ok = tracker->update(frame,bbox);
+=======
+        bool ok = tracker->update(frame,new_bbox);
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
         
         //Calculate Frames per second
         float fps = getTickFrequency() / ((double)getTickCount() - timer);
@@ -211,13 +388,46 @@ int Track::kcf()
         if(ok)
         {
             //Tracking success: draw tracked object
+<<<<<<< HEAD
             rectangle(frame, bbox, Scalar(225, 0, 0), 2, 1);
             //(x-1/2 height, x + 1/2 width) for middle of rectangle
         }
+=======
+            rectangle(frame, new_bbox, Scalar(225, 0, 0), 2, 1);
+            //(x+1/2 height, x + 1/2 width) for middle of rectangle
+        }
+
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
         else
         {
             //Tracking failure
             putText(frame, "Tracking Failure Detected", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
+<<<<<<< HEAD
+=======
+		
+    	    std::vector<Rect> drones;
+    	    Mat frame_gray;
+
+    	    cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
+    	    equalizeHist( frame_gray, frame_gray );
+
+    		//-- Detect drones
+    	    drone_cascade.detectMultiScale( frame_gray, drones, 1.1, 1, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+	    if(drones.size() == 0)
+	    {
+                putText(frame, "Can't find the object", Point(100, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
+	    }
+
+	    else
+	    {
+                putText(frame, "Found the object", Point(100, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
+	    	bbox.x = drones[0].x;  			bbox.y = drones[0].y;
+	    	bbox.width = drones[0].width; 		bbox.height = drones[0].height;
+
+                putText(frame, "Center - x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , Point(300, 50), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,225),2);
+		trackFail = true;
+	    }
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
         }
         
         // Display tracker type on frame
@@ -239,6 +449,73 @@ int Track::kcf()
 }
 
 
+<<<<<<< HEAD
+=======
+//Task:detect the drone from a live video input
+//Input:any video (with or without drone)
+//Output:successfully detect the drone from the video stream
+int Track::test()
+{
+	String drone_cascade_name = "face.xml";//swap with the drone training data
+	CascadeClassifier drone_cascade;
+	Mat frame;
+
+        if( !drone_cascade.load( drone_cascade_name ) )
+	{ cout <<"--(!)Error loading drone cascade\n" << endl; 
+		return 1;
+       	};
+
+	//VideoCapture video(0);
+	VideoCapture video("test/0001.webm");
+
+    	if(!video.isOpened())
+    	{
+        	cout << "Could not read video file" << endl;
+        	return 1;
+    	}
+
+    	//Read first frame
+    	video >> frame;
+	
+	while(video.read(frame))
+	{
+        	if( frame.empty() )
+        	{
+            	cout << " --(!) No captured frame -- Break!" << endl;
+            	break;
+        	}
+
+	//function from here
+
+    std::vector<Rect> drones;
+    Mat frame_gray;
+
+    cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
+    equalizeHist( frame_gray, frame_gray );
+
+    //-- Detect drones
+    drone_cascade.detectMultiScale( frame_gray, drones, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+
+    for ( size_t i = 0; i < drones.size(); i++ )
+    {
+        Point center( drones[i].x + drones[i].width/2, drones[i].y + drones[i].height/2 );
+        ellipse( frame, center, Size( drones[i].width/2, drones[i].height/2 ), 0, 0, 360, Scalar( 255, 0, 255 ), 4, 8, 0 );
+
+        //Mat droneROI = frame_gray(drones[i]);
+    }
+
+    //-- Show what you got
+    imshow( "Drone detection", frame );
+
+	//to here
+
+        if( waitKey(1) == 27 ) { break; } // escape
+	}
+
+	return 0;
+}
+
+>>>>>>> 99a3c3fb1b9bdaceb567f83478bfddccb1a07b21
 
 //Task:
 //Input:

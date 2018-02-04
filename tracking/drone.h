@@ -11,6 +11,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
+//#include <stdio.h>
+
 using namespace cv;
 using namespace std;
 
@@ -27,9 +29,10 @@ class Track
         Track();
         ~Track();
         int detect();
-        int detect(int&,int&,int&,int&);
+        int detect(int &x,int &y,int &width, int &height);
         int kcf(char * vid);
         int kcf();
+        int test();
         void display();
 
     private:
