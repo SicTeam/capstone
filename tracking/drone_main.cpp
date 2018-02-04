@@ -15,12 +15,15 @@ int main(int argc, char ** argv)
     cout << "OpenCV Version: " << CV_VERSION << endl;
 
     //if video is passed in then use it, otherwise use video stream
+    //track.test();
+
+    //for testing the detection
+
     if(argv[1]){
         track.kcf(argv[1]);
     }
     else{
         track.kcf();
-
         //track.display();
     }
     
