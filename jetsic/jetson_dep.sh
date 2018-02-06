@@ -4,6 +4,14 @@
 # TODO needs appropriate licensing.
 # This is a modified ROS install script from https://github.com/jetsonhacks/installROSTX1/
 # And https://github.com/NVIDIA-Jetson/redtail/blob/master/ros/scripts/jetson_ros_install.sh
+red=`tput setaf 1`
+reset=`tput sgr0`
+
+# Should not run this script as sudo.
+if [ "$EUID" = 0 ]; then
+    echo "${red}Please run this script as a non-root user.${reset}"
+    exit
+fi
 
 echo "This script will install in this order: \n"
 echo "\t1. OpenCV3.2 and its dependencies \n"
@@ -36,6 +44,7 @@ sudo apt-get install -y \
 sudo apt-get install -y python-dev python-numpy python-py python-pytest
 # GStreamer support
 sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev 
+# Gstreamer "plugins-bad" needed for ROS?
 
 
 git clone https://github.com/opencv/opencv.git
@@ -91,8 +100,11 @@ make install
 
 make clean
 
-# TODO Remove source code to make room for ROS install
+# TODO Can this remove be done in a safer manner?
+cd $HOME
+sudo rm -rf opencv
 
+sudo rm -rf opencv_extra
 
 # Update the repositories to include universe, multiverse and restricted
 
@@ -139,5 +151,5 @@ source /opt/ros/kinetic/setup.bash
 
 echo "3. No other stuff yet"
 
-# TODO add more ros packages
+# TODO add more ros packages -- so far only package I can think of is maybe a zed wrapper
 # TODO stopped on line 51 of redtail/jetson_install.sh
