@@ -1,0 +1,7 @@
+change build opencv to delete repos after build
+make list of ros packages we actually need
+    ros-base
+    ros-mavros
+    ros-vision_opencv
+    ros-opencv
+
