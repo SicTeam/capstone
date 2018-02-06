@@ -1,3 +1,5 @@
 *.swp
 *.out
 
+# My private todo list #
+todo.txt
