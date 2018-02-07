@@ -4,6 +4,8 @@
 # TODO needs appropriate licensing.
 # This is a modified ROS install script from https://github.com/jetsonhacks/installROSTX1/
 # And https://github.com/NVIDIA-Jetson/redtail/blob/master/ros/scripts/jetson_ros_install.sh
+
+
 red=`tput setaf 1`
 reset=`tput sgr0`
 
@@ -13,14 +15,14 @@ if [ "$EUID" = 0 ]; then
     exit
 fi
 
-echo "This script will install in this order: \n"
-echo "\t1. OpenCV3.2 and its dependencies \n"
-echo "\t2. ROS Base and Required Packages for skyNET \n"
-echo "\t3. Other stuff \n" 
+echo "This script will install in this order: "
+echo "  1. OpenCV3.2 and its dependencies "
+echo "  2. ROS Base and Required Packages for skyNET "
+echo "  3. Other stuff " 
 
 #Install OpenCV and its dependencies
 # This part of the script is from https://raw.githubusercontent.com/jetsonhacks/buildOpenCVTX1/master/buildOpenCV.sh
-echo "\t1. Installing OpenCV3.2... " 
+echo "1. Installing OpenCV3.2... " 
 cd $HOME
 sudo apt-get install -y \
     libglew-dev \
@@ -44,67 +46,99 @@ sudo apt-get install -y \
 sudo apt-get install -y python-dev python-numpy python-py python-pytest
 # GStreamer support
 sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev 
-# Gstreamer "plugins-bad" needed for ROS?
+# TODO Gstreamer "plugins-bad" needed for ROS?
 
-
-git clone https://github.com/opencv/opencv.git
-cd opencv
-git checkout -b v3.2.0 3.2.0
-# This is for the test data
 cd $HOME
-git clone https://github.com/opencv/opencv_extra.git
-cd opencv_extra
-git checkout -b v3.2.0 3.2.0
+OPENCV_BUILD=$HOME/opencv_build
+OPENCV_VERSION="3.2.0"
 
-cd $HOME/opencv
-mkdir build
-cd build
-# Jetson TX1 
-cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DBUILD_PNG=OFF \
-    -DBUILD_TIFF=OFF \
-    -DBUILD_TBB=OFF \
-    -DBUILD_JPEG=OFF \
-    -DBUILD_JASPER=OFF \
-    -DBUILD_ZLIB=OFF \
-    -DBUILD_EXAMPLES=ON \
-    -DBUILD_opencv_java=OFF \
-    -DBUILD_opencv_python2=ON \
-    -DBUILD_opencv_python3=OFF \
-    -DENABLE_PRECOMPILED_HEADERS=OFF \
-    -DWITH_OPENCL=OFF \
-    -DWITH_OPENMP=OFF \
-    -DWITH_FFMPEG=ON \
-    -DWITH_GSTREAMER=ON \
-    -DWITH_GSTREAMER_0_10=OFF \
-    -DWITH_CUDA=ON \
-    -DWITH_GTK=ON \
-    -DWITH_VTK=OFF \
-    -DWITH_TBB=ON \
-    -DWITH_1394=OFF \
-    -DWITH_OPENEXR=OFF \
-    -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0 \
-    -DCUDA_ARCH_BIN=5.3 \
-    -DCUDA_ARCH_PTX="" \
-    -DINSTALL_C_EXAMPLES=ON \
-    -DINSTALL_TESTS=ON \
-    -DOPENCV_TEST_DATA_PATH=../opencv_extra/testdata \
-    ../
+# Check for existance of opencv
+if [ "$(pkg-config --cflags opencv)" != "-I/usr/include/opencv" ]; then
+    echo "OpenCV not found.."
+    if [ ! -d "$OPENCV_BUILD" ]; then
+        mkdir -p $OPENCV_BUILD
+        cd $OPENCV_BUILD
+        echo " Cloning opencv.."
+        git clone https://github.com/opencv/opencv.git
+        cd opencv
+        git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
 
-# Consider running jetson_clocks.sh before compiling
-make -j4
+        git clone https://github.com/opencv/opencv_extra.git
+        cd ../opencv_extra
+        git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+    else
+        echo " Updating opencv sources " 
 
-make install
+        cd $OPENCV_BUILD/opencv
+        git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+        git pull
 
-make clean
+        cd ../opencv_extra
+        git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+        git pull
+    fi
+    # Build opencv from source 
+    cd $OPENCV_BUILD/opencv
+    mkdir build
+    cd build
 
-# TODO Can this remove be done in a safer manner?
-cd $HOME
-sudo rm -rf opencv
+    cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_PNG=OFF \
+        -DBUILD_TIFF=OFF \
+        -DBUILD_TBB=OFF \
+        -DBUILD_JPEG=OFF \
+        -DBUILD_JASPER=OFF \
+        -DBUILD_ZLIB=OFF \
+        -DBUILD_EXAMPLES=ON \
+        -DBUILD_opencv_java=OFF \
+        -DBUILD_opencv_python2=ON \
+        -DBUILD_opencv_python3=OFF \
+        -DENABLE_PRECOMPILED_HEADERS=OFF \
+        -DWITH_OPENCL=OFF \
+        -DWITH_OPENMP=OFF \
+        -DWITH_FFMPEG=ON \
+        -DWITH_GSTREAMER=ON \
+        -DWITH_GSTREAMER_0_10=OFF \
+        -DWITH_CUDA=ON \
+        -DWITH_GTK=ON \
+        -DWITH_VTK=OFF \
+        -DWITH_TBB=ON \
+        -DWITH_1394=OFF \
+        -DWITH_OPENEXR=OFF \
+        -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0 \
+        -DCUDA_ARCH_BIN=5.3 \
+        -DCUDA_ARCH_PTX="" \
+        -DINSTALL_C_EXAMPLES=ON \
+        -DINSTALL_TESTS=ON \
+        -DOPENCV_TEST_DATA_PATH=../opencv_extra/testdata \
+        ../
 
-sudo rm -rf opencv_extra
+    # Consider running jetson_clocks.sh before compiling
+    make -j4
+
+    make install
+    # Verify install
+
+    if [ "$(pkg-config --modversion opencv)" != "$OPENCV_VERSION" ]; then
+        echo "${red}OpenCV v$OPENCV_VERSION not successfully installed check 'pkg-config --modversion opencv' .. ${reset}"
+        exit
+    fi
+
+    make clean
+
+    # TODO Can this remove be done in a safer manner?
+    cd $HOME
+    sudo rm -rf $OPENCV_BUILD
+
+else
+    echo "OpenCV found, checking version"
+    if [ "$(pkg-config --modversion opencv)" != "$OPENCV_VERSION" ]; then
+        echo "${red}Need $OPENCV_VERSION, different version found uninstall and try again.. ${reset}"
+        exit
+    fi
+fi
 
 # Update the repositories to include universe, multiverse and restricted
 
@@ -131,10 +165,10 @@ sudo apt-get update
 # Install ROS base and MAVROS
 sudo apt-get install -y ros-kinetic-ros-base ros-kinetic-mavros ros-kinetic-mavros-extras
 
-sudo apt-get install -y ros-kinetic-vision-opencv \
-                        #ros-kinetic-PACKAGE \
+sudo apt-get install -y ros-kinetic-vision-opencv 
+#ros-kinetic-PACKAGE \
 
-# For some reason, SSL certificates get messed up on TX1 so Python scripts like rosdep will fail. Rehash the certs.
+    # For some reason, SSL certificates get messed up on TX1 so Python scripts like rosdep will fail. Rehash the certs.
 sudo c_rehash /etc/ssl/certs
 
 # MAVROS requires GeographicLib datasets starting v0.20 .
