@@ -13,9 +13,6 @@
 
 //#include <stdio.h>
 
-using namespace cv;
-using namespace std;
-
 // Convert to string
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -27,14 +24,17 @@ class Track
 {
     public:
         Track();
-        ~Track();
-        int detect();
-        int detect(int &x,int &y,int &width, int &height);
+        Track(std::string file_name);
+        int detect_image();
+        int detect(std::vector<cv::Rect> & drones, cv::Mat frame);
         int kcf(char * vid);
         int kcf();
-        int test();
         void display();
 
     private:
-        
+        cv::Rect target;
+        cv::Point target_point;
+        cv::CascadeClassifier cascade;
+        std::string cascade_name;
+        int min_neighbors;        
 };
