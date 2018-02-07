@@ -67,6 +67,10 @@ if [ "$(pkg-config --cflags opencv)" != "-I/usr/include/opencv" ]; then
         git clone https://github.com/opencv/opencv_extra.git
         cd opencv_extra
         git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+
+        cd $OPENCV_BUILD
+        git clone https://github.com/opencv/opencv_contrib.git
+        
     else
         echo " Updating opencv sources " 
 
@@ -119,7 +123,7 @@ if [ "$(pkg-config --cflags opencv)" != "-I/usr/include/opencv" ]; then
     # Consider running jetson_clocks.sh before compiling
     make -j4
 
-    make install
+    sudo make install
     # Verify install
 
     if [ "$(pkg-config --modversion opencv)" != "$OPENCV_VERSION" ]; then
