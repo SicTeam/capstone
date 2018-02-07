@@ -63,8 +63,9 @@ if [ "$(pkg-config --cflags opencv)" != "-I/usr/include/opencv" ]; then
         cd opencv
         git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
 
+        cd $OPENCV_BUILD
         git clone https://github.com/opencv/opencv_extra.git
-        cd ../opencv_extra
+        cd opencv_extra
         git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
     else
         echo " Updating opencv sources " 
@@ -73,7 +74,7 @@ if [ "$(pkg-config --cflags opencv)" != "-I/usr/include/opencv" ]; then
         git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
         git pull
 
-        cd ../opencv_extra
+        cd $OPENCV_BUILD/opencv_extra
         git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
         git pull
     fi
