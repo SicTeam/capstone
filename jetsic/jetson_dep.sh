@@ -52,98 +52,106 @@ cd $HOME
 OPENCV_BUILD=$HOME/opencv_build
 OPENCV_VERSION="3.2.0"
 
+
 # Check for existance of opencv
-if [ "$(pkg-config --cflags opencv)" != "-I/usr/include/opencv" ]; then
-    echo "OpenCV not found.."
-    if [ ! -d "$OPENCV_BUILD" ]; then
-        mkdir -p $OPENCV_BUILD
-        cd $OPENCV_BUILD
-        echo " Cloning opencv.."
-        git clone https://github.com/opencv/opencv.git
-        cd opencv
-        git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
-
-        cd $OPENCV_BUILD
-        git clone https://github.com/opencv/opencv_extra.git
-        cd opencv_extra
-        git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
-
-        cd $OPENCV_BUILD
-        git clone https://github.com/opencv/opencv_contrib.git
-        
-    else
-        echo " Updating opencv sources " 
-
-        cd $OPENCV_BUILD/opencv
-        git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
-        git pull
-
-        cd $OPENCV_BUILD/opencv_extra
-        git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
-        git pull
-    fi
-    # Build opencv from source 
-    cd $OPENCV_BUILD/opencv
-    mkdir build
-    cd build
-
-    cmake \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=/usr \
-        -DBUILD_PNG=OFF \
-        -DBUILD_TIFF=OFF \
-        -DBUILD_TBB=OFF \
-        -DBUILD_JPEG=OFF \
-        -DBUILD_JASPER=OFF \
-        -DBUILD_ZLIB=OFF \
-        -DBUILD_EXAMPLES=ON \
-        -DBUILD_opencv_java=OFF \
-        -DBUILD_opencv_python2=ON \
-        -DBUILD_opencv_python3=OFF \
-        -DENABLE_PRECOMPILED_HEADERS=OFF \
-        -DWITH_OPENCL=OFF \
-        -DWITH_OPENMP=OFF \
-        -DWITH_FFMPEG=ON \
-        -DWITH_GSTREAMER=ON \
-        -DWITH_GSTREAMER_0_10=OFF \
-        -DWITH_CUDA=ON \
-        -DWITH_GTK=ON \
-        -DWITH_VTK=OFF \
-        -DWITH_TBB=ON \
-        -DWITH_1394=OFF \
-        -DWITH_OPENEXR=OFF \
-        -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0 \
-        -DCUDA_ARCH_BIN=5.3 \
-        -DCUDA_ARCH_PTX="" \
-        -DINSTALL_C_EXAMPLES=ON \
-        -DINSTALL_TESTS=ON \
-        -DOPENCV_TEST_DATA_PATH=../opencv_extra/testdata \
-        ../
-
-    # Consider running jetson_clocks.sh before compiling
-    make -j4
-
-    sudo make install
-    # Verify install
-
-    if [ "$(pkg-config --modversion opencv)" != "$OPENCV_VERSION" ]; then
-        echo "${red}OpenCV v$OPENCV_VERSION not successfully installed check 'pkg-config --modversion opencv' .. ${reset}"
-        exit
-    fi
-
-    make clean
-
-    # TODO Can this remove be done in a safer manner?
-    cd $HOME
-    sudo rm -rf $OPENCV_BUILD
-
-else
+if [ "$(pkg-config --cflags opencv)" = "-I/usr/include/opencv" ]; then
     echo "OpenCV found, checking version"
     if [ "$(pkg-config --modversion opencv)" != "$OPENCV_VERSION" ]; then
         echo "${red}Need $OPENCV_VERSION, different version found uninstall and try again.. ${reset}"
         exit
     fi
 fi
+
+echo "OpenCV not found, preparing to build"
+
+if [ ! -d "$OPENCV_BUILD" ]; then
+    mkdir -p $OPENCV_BUILD
+    cd $OPENCV_BUILD
+    echo " Cloning opencv.."
+    git clone https://github.com/opencv/opencv.git
+    cd opencv
+    git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+
+    cd $OPENCV_BUILD
+    git clone https://github.com/opencv/opencv_extra.git
+    cd opencv_extra
+    git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+
+    cd $OPENCV_BUILD
+    git clone https://github.com/opencv/opencv_contrib.git
+    cd opencv_contrib
+    git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+else
+    echo " Updating opencv sources "
+
+    cd $OPENCV_BUILD/opencv
+    git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+    git pull
+
+    cd $OPENCV_BUILD/opencv_extra
+    git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+    git pull
+
+    cd $OPENCV_BUILD/opencv_contrib
+    git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+    git pull
+fi
+
+# Build opencv from source
+cd $OPENCV_BUILD/opencv
+mkdir build
+cd build
+cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_PNG=OFF \
+    -DBUILD_TIFF=OFF \
+    -DBUILD_TBB=OFF \
+    -DBUILD_JPEG=OFF \
+    -DBUILD_JASPER=OFF \
+    -DBUILD_ZLIB=OFF \
+    -DBUILD_EXAMPLES=ON \
+    -DBUILD_opencv_java=OFF \
+    -DBUILD_opencv_python2=ON \
+    -DBUILD_opencv_python3=OFF \
+    -DENABLE_PRECOMPILED_HEADERS=OFF \
+    -DWITH_OPENCL=OFF \
+    -DWITH_OPENMP=OFF \
+    -DWITH_FFMPEG=ON \
+    -DWITH_GSTREAMER=ON \
+    -DWITH_GSTREAMER_0_10=OFF \
+    -DWITH_CUDA=ON \
+    -DWITH_GTK=ON \
+    -DWITH_VTK=OFF \
+    -DWITH_TBB=ON \
+    -DWITH_1394=OFF \
+    -DWITH_OPENEXR=OFF \
+    -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0 \
+    -DCUDA_ARCH_BIN=5.3 \
+    -DCUDA_ARCH_PTX="" \
+    -DINSTALL_C_EXAMPLES=ON \
+    -DINSTALL_TESTS=ON \
+    -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
+    -DOPENCV_TEST_DATA_PATH=../opencv_extra/testdata \
+    ../
+
+# Consider running jetson_clocks.sh before compiling
+make -j4
+
+sudo make install
+
+# Verify install
+if [ "$(pkg-config --modversion opencv)" != "$OPENCV_VERSION" ]; then
+    echo "${red}OpenCV v$OPENCV_VERSION not successfully installed check 'pkg-config --modversion opencv' .. ${reset}"
+    exit
+fi
+
+make clean
+
+# TODO Can this remove be done in a safer manner?
+cd $HOME
+sudo rm -rf $OPENCV_BUILD
+
 
 # Update the repositories to include universe, multiverse and restricted
 
