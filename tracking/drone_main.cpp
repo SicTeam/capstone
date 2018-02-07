@@ -10,21 +10,22 @@
 //Output:
 int main(int argc, char ** argv)
 {
-    Track track;
-
-    cout << "OpenCV Version: " << CV_VERSION << endl;
-
-    //if video is passed in then use it, otherwise use video stream
-    //track.test();
+    Track drone_track;
+    
+    std::cout << "OpenCV Version: " << CV_VERSION << std::endl;
 
     //for testing the detection
+//    drone_track.detect_image();
 
-    if(argv[1]){
-        track.kcf(argv[1]);
+    //detect/track off video passed in, else use live video feed
+    if(argv[1])
+    {
+        drone_track.kcf(argv[1]);
     }
-    else{
-        track.kcf();
-        //track.display();
+    else
+    {
+        Track face_track("face.xml");
+        face_track.kcf();
     }
     
     return 0;

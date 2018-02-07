@@ -1,3 +1,0 @@
-/home/khuong/capstone/tracking/CMakeFiles/rebuild_cache.dir
-/home/khuong/capstone/tracking/CMakeFiles/detect.dir
-/home/khuong/capstone/tracking/CMakeFiles/edit_cache.dir
