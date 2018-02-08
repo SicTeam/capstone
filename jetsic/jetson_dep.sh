@@ -18,7 +18,7 @@ fi
 echo "This script will install in this order: "
 echo "  1. OpenCV3.2 and its dependencies "
 echo "  2. ROS Base and Required Packages for skyNET "
-echo "  3. Other stuff " 
+#echo "  3. Other stuff " 
 
 #Install OpenCV and its dependencies
 # This part of the script is from https://raw.githubusercontent.com/jetsonhacks/buildOpenCVTX1/master/buildOpenCV.sh
@@ -196,7 +196,5 @@ echo "source /opt/ros/kinetic/setup.bash" >> $HOME/.bashrc
 source /opt/ros/kinetic/setup.bash
 
 
-echo "3. No other stuff yet"
+#echo "3. No other stuff yet"
 
-# TODO add more ros packages -- so far only package I can think of is maybe a zed wrapper
-# TODO stopped on line 51 of redtail/jetson_install.sh
