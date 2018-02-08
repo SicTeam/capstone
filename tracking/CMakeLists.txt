@@ -1,8 +1,8 @@
 #contains the build of detection/track directory
 
 #XXX keep track of this cmake version requirement, might not work on jetson
-cmake_minimum_required(VERSION 2.8)
-project(Drone_Detect)
+#cmake_minimum_required(VERSION 2.8)
+#project(Drone_Detect)
 find_package(OpenCV REQUIRED)
 
 #Detection
