@@ -23,6 +23,8 @@ Track::~Track()
 
 }
 
+
+
 int Track::detect(int &x,int &y,int &width, int &height)
 {
 
@@ -97,13 +99,51 @@ int Track::detect(int &x,int &y,int &width, int &height)
 	return 0;
 }
 
-//Task:
+//Task: Detects drone from test images
 //Input:
 //Output:
 int Track::detect()
 {
+    CascadeClassifier drone_cascade;
+    //String drone_cascade_name = "/home/cody/Desktop/Training/data/cascade.xml";
+    String drone_cascade_name = "cascade.xml";
+    //String image("test/test_image/1.jpeg");
+    VideoCapture video("test/Video_1.avi");
+    vector<Rect> drones;
+    Mat frame;
+    Mat frame_gray;
+
+    video >> frame;
+    //frame = imread( image, IMREAD_COLOR);
+
+    if(!drone_cascade.load(drone_cascade_name)) 
+    {
+        cout << "Error loading drone cascade\n";
+        return -1;
+    }
+
+    cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
+    equalizeHist(frame_gray, frame_gray);
+
+    //detect drone
+    drone_cascade.detectMultiScale(frame_gray, drones, 1.05, 4, 0|CASCADE_SCALE_IMAGE, Size(30, 30));
+
+    cout << "Objects Detected: " << drones.size() << endl;
+
+    for(size_t i = 0; i < drones.size(); ++i)
+    {
+        Point center(drones[i].x + drones[i].width/2, drones[i].y + drones[i].height/2);
+        rectangle(frame, drones[i], Scalar(225,0,0),2,8);
+    }
+
+    namedWindow("Drone Detect", WINDOW_AUTOSIZE);
+    imshow("Drone Detect", frame);
+    waitKey(0);
+
     return 0;
 }
+
+
 
 //Task:   Allows tracking of object through video passed in
 //Input:  Takes in video stored in testing directory
@@ -208,6 +248,7 @@ int Track::kcf()
 {
     //create tracker
     string trackerType = "MEDIANFLOW";
+    //String trackerType = "KCF";
     Ptr<Tracker> tracker;
     String drone_cascade_name = "face.xml";//swap with the drone training data
     CascadeClassifier drone_cascade;
@@ -216,8 +257,8 @@ int Track::kcf()
 
     if( !drone_cascade.load( drone_cascade_name ) )
     { 
-	cout <<"--(!)Error loading drone cascade\n" << endl; 
-	return 1;
+	    cout <<"--(!)Error loading drone cascade\n" << endl; 
+	    return 1;
     }
 
     #if (CV_MINOR_VERSION < 3)
@@ -265,24 +306,25 @@ int Track::kcf()
     while(video.read(frame)) 
     {
 
-	Rect2d new_bbox(bbox.x,bbox.y,bbox.width,bbox.height);
+        Rect2d new_bbox(bbox.x,bbox.y,bbox.width,bbox.height);
 
-	if(trackFail)
-	{
-            	putText(frame, "Tracking re-initting", Point(300, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
-    		#if (CV_MINOR_VERSION < 3)
-    		{
-       	 		tracker = Tracker::create(trackerType);
-    		}
-    		#else
-    		{
-        		tracker = TrackerKCF::create();
-    		}
-    		#endif
+        if(trackFail)
+        {
+                putText(frame, "Tracking re-initting", Point(300, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
+                #if (CV_MINOR_VERSION < 3)
+                {
+                    tracker = Tracker::create(trackerType);
+                }
+                #else
+                {
+                    tracker = TrackerKCF::create();
+                }
+                #endif
 
-		tracker->init(frame,new_bbox);
-		trackFail = false;
-	}
+            tracker->init(frame,new_bbox);
+            rectangle(frame, new_bbox, Scalar(225, 0, 0), 2, 1);
+            trackFail = false;
+        }
 
         //Start timer
         double timer = (double)getTickCount();
@@ -304,31 +346,31 @@ int Track::kcf()
         {
             //Tracking failure
             putText(frame, "Tracking Failure Detected", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
-		
-    	    std::vector<Rect> drones;
-    	    Mat frame_gray;
+        
+            std::vector<Rect> drones;
+            Mat frame_gray;
 
-    	    cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
-    	    equalizeHist( frame_gray, frame_gray );
+            cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
+            equalizeHist( frame_gray, frame_gray );
 
-    		//-- Detect drones
-    	    drone_cascade.detectMultiScale( frame_gray, drones, 1.1, 1, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
-	    if(drones.size() == 0)
-	    {
+            //-- Detect drones
+            drone_cascade.detectMultiScale( frame_gray, drones, 1.05, 3, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+            if(drones.size() == 0)
+            {
                 putText(frame, "Can't find the object", Point(100, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
-	    }
+            }
 
-	    else
-	    {
+            else
+            {
                 putText(frame, "Found the object", Point(100, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
-	    	bbox.x = drones[0].x;  			bbox.y = drones[0].y;
-	    	bbox.width = drones[0].width; 		bbox.height = drones[0].height;
+                bbox.x = drones[0].x;  			bbox.y = drones[0].y;
+                bbox.width = drones[0].width; 		bbox.height = drones[0].height;
 
                 putText(frame, "Center - x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , Point(300, 50), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,225),2);
-		trackFail = true;
-	    }
+                trackFail = true;
+            }
         }
-        
+            
         // Display tracker type on frame
         putText(frame, trackerType + " Tracker", Point(100,20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50,170,50),2);
 
@@ -344,6 +386,7 @@ int Track::kcf()
             break;
         }
     }
+    
     return 0;
 }
 
@@ -357,56 +400,58 @@ int Track::test()
 	CascadeClassifier drone_cascade;
 	Mat frame;
 
-        if( !drone_cascade.load( drone_cascade_name ) )
-	{ cout <<"--(!)Error loading drone cascade\n" << endl; 
+    if(!drone_cascade.load(drone_cascade_name))
+	{ 
+        cout <<"--(!)Error loading drone cascade\n" << endl; 
 		return 1;
-       	};
+    }
 
 	//VideoCapture video(0);
 	VideoCapture video("test/0001.webm");
 
-    	if(!video.isOpened())
-    	{
-        	cout << "Could not read video file" << endl;
-        	return 1;
-    	}
+    if(!video.isOpened())
+    {
+        cout << "Could not read video file" << endl;
+        return 1;
+    }
 
-    	//Read first frame
-    	video >> frame;
+    //Read first frame
+    video >> frame;
 	
 	while(video.read(frame))
 	{
-        	if( frame.empty() )
-        	{
-            	cout << " --(!) No captured frame -- Break!" << endl;
-            	break;
-        	}
+        if( frame.empty() )
+        {
+            cout << " --(!) No captured frame -- Break!" << endl;
+            break;
+        }
 
-	//function from here
+        //function from here
 
-    std::vector<Rect> drones;
-    Mat frame_gray;
+        std::vector<Rect> drones;
+        Mat frame_gray;
 
-    cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
-    equalizeHist( frame_gray, frame_gray );
+        cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
+        equalizeHist( frame_gray, frame_gray );
 
-    //-- Detect drones
-    drone_cascade.detectMultiScale( frame_gray, drones, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+        //-- Detect drones
+        drone_cascade.detectMultiScale( frame_gray, drones, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
 
-    for ( size_t i = 0; i < drones.size(); i++ )
-    {
-        Point center( drones[i].x + drones[i].width/2, drones[i].y + drones[i].height/2 );
-        ellipse( frame, center, Size( drones[i].width/2, drones[i].height/2 ), 0, 0, 360, Scalar( 255, 0, 255 ), 4, 8, 0 );
+        for ( size_t i = 0; i < drones.size(); i++ )
+        {
+            Point center( drones[i].x + drones[i].width/2, drones[i].y + drones[i].height/2 );
+            ellipse( frame, center, Size( drones[i].width/2, drones[i].height/2 ), 0, 0, 360, Scalar( 255, 0, 255 ), 4, 8, 0 );
 
-        //Mat droneROI = frame_gray(drones[i]);
-    }
+            //Mat droneROI = frame_gray(drones[i]);
+        }
 
-    //-- Show what you got
-    imshow( "Drone detection", frame );
+        //-- Show what you got
+        imshow( "Drone detection", frame );
 
-	//to here
-
-        if( waitKey(1) == 27 ) { break; } // escape
+        if( waitKey(1) == 27 ) 
+        { 
+            break; 
+        } 
 	}
 
 	return 0;
