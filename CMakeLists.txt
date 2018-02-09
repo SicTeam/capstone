@@ -1,6 +1,7 @@
 # CMakeLists files in this project can refer to the root source 
 # directory of the project as ${SkyNet_SOURCE_DIR} and to the 
 # root binary directory of the project as ${SkyNet_BINARY_DIR}.
+
 cmake_minimum_required (VERSION 2.8)
 project (SkyNet)
 
@@ -16,8 +17,12 @@ project (SkyNet)
 # The following folder will be included
 #include_directories("${PROJECT_SOURCE_DIR}")
 
-# Recurse into the "Hello" and "Demo" subdirectories. This does not actually
+# Recurse into the "tracking" and "pursuit" subdirectories. This does not actually
 # cause another cmake executable to run. The same process will walk through
 # the project's entire directory structure.
+
 add_subdirectory (tracking)
 #add_subdirectory (pursuit)
+
+# XXX need to figure out a way to get control_flow to compile properly
+#add_executable(start control_flow.cpp)

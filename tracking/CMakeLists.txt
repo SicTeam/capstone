@@ -5,6 +5,9 @@
 #project(Drone_Detect)
 find_package(OpenCV REQUIRED)
 
+#add_library(detect drone_track.cpp drone_main.cpp)
+#target_include_directories (detect PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 #Detection
 add_executable(detect drone_track.cpp drone_main.cpp)
 target_link_libraries(detect ${OpenCV_LIBS})
