@@ -30,6 +30,7 @@
 *.exe
 *.out
 *.app
+/tracking/detect
 
 # CMake Files
 *.cmake
@@ -37,3 +38,6 @@
 /CMakeCache.txt
 /Makefile
 /CMakeFiles/
+/tracking/CMakeCache.txt
+/tracking/Makefile
+/tracking/CMakeFiles/
