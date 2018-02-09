@@ -118,6 +118,7 @@ if [ ! -d "$OPENCV_BUILD" && "$SKIP_OPENCV" = false ]; then
     git clone https://github.com/opencv/opencv_contrib.git
     cd opencv_contrib
     git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
+
 elif [ "$SKIP_OPENCV" = false ]; then 
     echo " Updating opencv sources "
 
@@ -161,6 +162,7 @@ if [ "$SKIP_OPENCV" = false ]; then
 else
     echo "Skipped OPENCV"
 fi
+
 # Update the repositories to include universe, multiverse and restricted
 
 echo "Prep for ROS install, updating respositories, adding: universe, multiverse, and restricted..."
@@ -189,7 +191,7 @@ sudo apt-get install -y ros-kinetic-ros-base ros-kinetic-mavros ros-kinetic-mavr
 sudo apt-get install -y ros-kinetic-vision-opencv 
 #ros-kinetic-PACKAGE \
 
-    # For some reason, SSL certificates get messed up on TX1 so Python scripts like rosdep will fail. Rehash the certs.
+# For some reason, SSL certificates get messed up on TX1 so Python scripts like rosdep will fail. Rehash the certs.
 sudo c_rehash /etc/ssl/certs
 
 # MAVROS requires GeographicLib datasets starting v0.20 .
@@ -203,7 +205,6 @@ rosdep update
 echo "source /opt/ros/kinetic/setup.bash" >> $HOME/.bashrc
 source /opt/ros/kinetic/setup.bash
 
-#fi
 
 #echo "3. No other stuff yet"
 
