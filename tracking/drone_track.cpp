@@ -10,7 +10,13 @@
 //Output:
 Track::Track()
 {
-
+    //cascade_name = "/home/cody/Desktop/test_train/data/cascade.xml";
+    min_neighbors = 7; //the higher this number the more strict detection is
+    cascade_name = "cascade.xml";
+    if(!cascade.load(cascade_name))
+    {
+        std::cout << "FAIL" << std::endl;
+    }
 }
 
 
@@ -18,220 +24,195 @@ Track::Track()
 //Task:
 //Input:
 //Output:
-Track::~Track()
+Track::Track(std::string file_name)
 {
-
+    min_neighbors = 3;//the higher this number the more strict detection is
+    cascade_name = file_name;
+    if(!cascade.load(cascade_name))
+    {
+        std::cout << "FAIL" << std::endl;
+    }
 }
 
 
-
-int Track::detect(int &x,int &y,int &width, int &height)
-{
-
-	int foundObj = 0;
-
-	String drone_cascade_name = "face.xml";//swap with the drone training data
-	CascadeClassifier drone_cascade;
-	Mat frame;
-
-        if( !drone_cascade.load( drone_cascade_name ) )
-	{ 
-		cout <<"--(!)Error loading drone cascade\n" << endl; 
-		return 1;
-       	}
-
-	VideoCapture video_2(0);
-
-    	//Read first frame
-    	video_2 >> frame;
-	
-	while(video_2.read(frame))
-	{
-
-        	if( frame.empty() )
-        	{
-            	cout << " --(!) No captured frame -- Break!" << endl;
-            	break;
-        	}
-
-		//function from here
-
-    		std::vector<Rect> drones;
-    		Mat frame_gray;
-
-    		cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
-    		equalizeHist( frame_gray, frame_gray );
-
-    		//-- Detect drones
-    		drone_cascade.detectMultiScale( frame_gray, drones, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
-
-		imshow("Detect",frame);
-
-		if(drones.size() == 0)
-		{
-			cout << "Can't find the object" << endl;
-		        break;	
-		}
-
-		else
-		{
-    			x = drones[0].x; 
-    			y = drones[0].y;
-   			width = drones[0].width;
-    			height = drones[0].height;
-			video_2.release();
-			if(!video_2.isOpened())
-			{
-				cout<<"Video is closed in detection" << endl;
-			}
-			return 1;
-		}
-
-        	char c = (char)waitKey(10);
-        	if( c == 27 ) { break; } // escape
-	}
-
-	video_2.release();
-	if(!video_2.isOpened())
-	{
-		cout<<"Video is closed in detection" << endl;
-	}
-	return 0;
-}
 
 //Task: Detects drone from test images
 //Input:
 //Output:
-int Track::detect()
+int Track::detect_image()
 {
-    CascadeClassifier drone_cascade;
-    //String drone_cascade_name = "/home/cody/Desktop/Training/data/cascade.xml";
-    String drone_cascade_name = "cascade.xml";
     //String image("test/test_image/1.jpeg");
-    VideoCapture video("test/Video_1.avi");
-    vector<Rect> drones;
-    Mat frame;
-    Mat frame_gray;
+    cv::VideoCapture video("test/Video_1.avi");
+    std::vector<cv::Rect> drones;
+    cv::Mat frame;
 
     video >> frame;
     //frame = imread( image, IMREAD_COLOR);
 
-    if(!drone_cascade.load(drone_cascade_name)) 
+    if(!detect(drones, frame))
     {
-        cout << "Error loading drone cascade\n";
-        return -1;
+        std::cout << "No object Detected" << std::endl;
+        return 0;
     }
 
-    cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
-    equalizeHist(frame_gray, frame_gray);
-
-    //detect drone
-    drone_cascade.detectMultiScale(frame_gray, drones, 1.05, 4, 0|CASCADE_SCALE_IMAGE, Size(30, 30));
-
-    cout << "Objects Detected: " << drones.size() << endl;
-
-    for(size_t i = 0; i < drones.size(); ++i)
-    {
-        Point center(drones[i].x + drones[i].width/2, drones[i].y + drones[i].height/2);
-        rectangle(frame, drones[i], Scalar(225,0,0),2,8);
-    }
-
-    namedWindow("Drone Detect", WINDOW_AUTOSIZE);
-    imshow("Drone Detect", frame);
-    waitKey(0);
+    cv::namedWindow("Drone Detect", cv::WINDOW_AUTOSIZE);
+    cv::imshow("Drone Detect", frame);
+    cv::waitKey(0);
 
     return 0;
 }
 
 
+//Task:   Detects drones from video
+//Input:  Takes in a vector of drones of type Rect
+//Output: Outputs how many drones were detected, zero means fail
+int Track::detect(std::vector<cv::Rect> & drones, cv::Mat frame)
+{
+    cv::Mat frame_gray;
 
+    cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
+    cv::equalizeHist(frame_gray, frame_gray);
+
+    //detect drone
+    cascade.detectMultiScale(frame_gray, drones, 1.1, min_neighbors, 0|cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
+
+    //return 0 when no objects detected
+    if(drones.size() == 0)
+    {
+        putText(frame, "Can't find the object", cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+        return 0; 
+    }
+
+    int size = drones.size();
+    std::cout << "Objects Detected: " << size << std::endl;
+
+    //cv::Point center(drones[0].x + drones[0].width/2, drones[0].y + drones[0].height/2);
+    
+    //set class target point to pass to pursuit
+    //target = center;
+
+    //XXX determine which element of drones is actually the drone
+    for(size_t i = 0; i < size; ++i)
+    {
+        rectangle(frame, drones[i], cv::Scalar(225,0,0),2,8);
+    }
+
+    return size;
+}
+
+
+//XXX No tracking failure so it doesn't detect
 //Task:   Allows tracking of object through video passed in
 //Input:  Takes in video stored in testing directory
 //Output: Displays video frame by frame while tracking selected object
 int Track::kcf(char * vid)
 {
-    //create tracker
-    string trackerType = "KCF";
-    //string video_cap = vid;
-    Ptr<Tracker> tracker;
-    Mat frame; //holds video frame
-
-    #if (CV_MINOR_VERSION < 3)
-    {
-        tracker = Tracker::create(trackerType);
-    }
-    #else
-    {
-        tracker = TrackerKCF::create();
-    }
-    #endif
-
-    int x,y,width,height,getInfo;//parameter for the box
-
-    /*getInfo = detect(x,y,width,height);
-    if(getInfo == 0)
-    	return 1;
-    cout << "Found the para for object:  " << x << "  " << y << "  " << width <<"  " << height << endl;
-    */
+    std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
+    std::vector<cv::Rect> drones;
+    cv::Ptr<cv::Tracker> tracker;
+    cv::Mat frame; //holds video frame
+    cv::Rect2d bbox;
+    bool trackFail = false;
+    
+    //set tracker
+    std::string trackerType = trackerTypes[2];
+    tracker = cv::Tracker::create(trackerType);
 
     //Read video from a video clip
-    VideoCapture video(vid);
+    cv::VideoCapture video(vid);
 
     //Exit if video is not opened
     if(!video.isOpened())
     {
-        cout << "Could not read video file" << endl;
+        std::cout << "Could not read video file" << std::endl;
         return 1;
     }
-
-    //Read first frame
-    video >> frame;
     
-    //Define initial bounding box
-    Rect2d bbox(150, 50, 100, 300);
-    //Rect2d bbox(x,y,width,height);
+    //take first frame
+    video >> frame;
 
-    if(bbox.width==0 || bbox.height==0)
-        return 1;
+    //detect object in frame
+    if(!detect(drones, frame))
+    {
+        std::cout << "--(!)No Initial Objects Detected" << std::endl;
+        return 0;
+    }
 
-    //comment this out to not choose the box with mouse
-    bbox = selectROI(frame, false);
+    bbox = drones[0];
+    rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
     tracker->init(frame, bbox);
 
+    //TEST Store bounding box and center
+    cv::Point center(drones[0].x + drones[0].width/2, drones[0].y + drones[0].height/2);
+    target_point = center;
+    target = drones[0];
+    display();
+    //***************************************
+    
     while(video.read(frame)) 
     {
+        //Display all detections*****************
+//        detect(drones, frame);
+//        for(size_t i = 0; i < drones.size(); ++i)
+//        {
+//            rectangle(frame, drones[i], cv::Scalar(225,0,0),2,8);
+//        }
+        //***************************************
+
+        if(trackFail)
+        {
+            cv::putText(frame, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+            tracker = cv::Tracker::create(trackerType);
+            tracker->init(frame, bbox);
+            rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
+            trackFail = false;
+        }
+
         //Start timer
-        double timer = (double)getTickCount();
-        
+        double timer = (double)cv::getTickCount();
+       
+        //XXX Always returns true????
         //Update tracking result
-        bool ok = tracker->update(frame,bbox);
+        bool ok = tracker->update(frame, bbox);
         
         //Calculate Frames per second
-        float fps = getTickFrequency() / ((double)getTickCount() - timer);
+        float fps = cv::getTickFrequency() / ((double)cv::getTickCount() - timer);
 
         if(ok)
         {
             //Tracking success: draw tracked object
-            rectangle(frame, bbox, Scalar(225, 0, 0), 2, 1);
-            //(x+1/2 height, x + 1/2 width) for middle of rectangle
+            rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
         }
         else
         {
             //Tracking failure
-            putText(frame, "Tracking Failure Detected", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
+            cv::putText(frame, "Tracking Failure Detected", cv::Point(100, 80), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+            
+            if(!detect(drones, frame))
+            {
+                std::cout << "--(!)Lost Target" << std::endl;
+                return 0;
+            }
+            else
+            {
+                cv::putText(frame, "Found the object", cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+                bbox = drones[0];
+                cv::putText(frame, "Center - x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , cv::Point(300, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,225),2);
+                trackFail = true;
+            } 
         }
         
         // Display tracker type on frame
-        putText(frame, trackerType + " Tracker", Point(100,20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50,170,50),2);
+        cv::putText(frame, trackerType + " Tracker", cv::Point(100,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
 
         // Display FPS on frame
-        putText(frame, "FPS : " + SSTR(int(fps)), Point(100,50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50,170,50), 2);
+        cv::putText(frame, "FPS : " + SSTR(int(fps)), cv::Point(100,50), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50), 2);
 
         // Display frame.
-        imshow("Tracking", frame);
+        cv::imshow("Tracking", frame);
 
         // Exit if ESC pressed.
-        if(waitKey(1) == 27)
+        if(cv::waitKey(1) == 27)
         {
             break;
         }
@@ -246,142 +227,97 @@ int Track::kcf(char * vid)
 //Output: Outputs video frame by frame showing tracking of object
 int Track::kcf()
 {
-    //create tracker
-    string trackerType = "MEDIANFLOW";
-    //String trackerType = "KCF";
-    Ptr<Tracker> tracker;
-    String drone_cascade_name = "face.xml";//swap with the drone training data
-    CascadeClassifier drone_cascade;
-    Mat frame; //holds video frame
+    std::string trackerType = "MEDIANFLOW";
+    //std::string trackerType = "KCF";
+    std::vector<cv::Rect> faces;   
+    cv::Ptr<cv::Tracker> tracker;
+    cv::Mat frame; //holds video frame
+    cv::Rect2d bbox;
     bool trackFail = false;
 
-    if( !drone_cascade.load( drone_cascade_name ) )
-    { 
-	    cout <<"--(!)Error loading drone cascade\n" << endl; 
-	    return 1;
-    }
-
-    #if (CV_MINOR_VERSION < 3)
-    {
-        tracker = Tracker::create(trackerType);
-    }
-    #else
-    {
-        tracker = TrackerKCF::create();
-    }
-    #endif
-
-    //Define initial bounding box
-
-    int x,y,width,height,getInfo;//parameter for the box
-
-    getInfo = detect(x,y,width,height);
-    if(getInfo == 0)
-    	return 1;
-    //cout << "Found the para for object:  " << x << "  " << y << "  " << width <<"  " << height << endl;
+    //create tracker
+    tracker = cv::Tracker::create(trackerType);
 
     //Read video from a camera
-    VideoCapture video(0);
+    cv::VideoCapture video(0);
 
     //Exit if video is not opened
     if(!video.isOpened())
     {
-        cout << "Could not read video file" << endl;
+        std::cout << "--(!)Could not read video" << std::endl;
         return 1;
     }
 
     //Read first frame
     video >> frame;
+    
+    //detect object in frame
+    if(!detect(faces, frame))
+    {
+        std::cout << "--(!)No Initial Objects Detected" << std::endl;
+        return 0;
+    }
 
-    Rect2d bbox(x,y,width,height);
-
-    //Rect2d bbox(287, 23, 86, 320);
-
-    if(bbox.width==0 || bbox.height==0)
-        return 1;
-
-    //bbox = selectROI(frame, false);
+    bbox = faces[0];
+    rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
     tracker->init(frame, bbox);
-
+    
     while(video.read(frame)) 
     {
-
-        Rect2d new_bbox(bbox.x,bbox.y,bbox.width,bbox.height);
-
         if(trackFail)
         {
-                putText(frame, "Tracking re-initting", Point(300, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
-                #if (CV_MINOR_VERSION < 3)
-                {
-                    tracker = Tracker::create(trackerType);
-                }
-                #else
-                {
-                    tracker = TrackerKCF::create();
-                }
-                #endif
-
-            tracker->init(frame,new_bbox);
-            rectangle(frame, new_bbox, Scalar(225, 0, 0), 2, 1);
+            cv::putText(frame, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+            tracker = cv::Tracker::create(trackerType);
+            tracker->init(frame, bbox);
+            rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
             trackFail = false;
         }
 
         //Start timer
-        double timer = (double)getTickCount();
+        double timer = (double)cv::getTickCount();
         
         //Update tracking result
-        bool ok = tracker->update(frame,new_bbox);
+        bool ok = tracker->update(frame, bbox);
         
         //Calculate Frames per second
-        float fps = getTickFrequency() / ((double)getTickCount() - timer);
+        float fps = cv::getTickFrequency() / ((double)cv::getTickCount() - timer);
 
         if(ok)
         {
             //Tracking success: draw tracked object
-            rectangle(frame, new_bbox, Scalar(225, 0, 0), 2, 1);
-            //(x+1/2 height, x + 1/2 width) for middle of rectangle
+            rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
         }
 
         else
         {
             //Tracking failure
-            putText(frame, "Tracking Failure Detected", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
-        
-            std::vector<Rect> drones;
-            Mat frame_gray;
-
-            cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
-            equalizeHist( frame_gray, frame_gray );
-
-            //-- Detect drones
-            drone_cascade.detectMultiScale( frame_gray, drones, 1.05, 3, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
-            if(drones.size() == 0)
+            cv::putText(frame, "Tracking Failure Detected", cv::Point(100, 80), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+            
+            if(!detect(faces, frame))
             {
-                putText(frame, "Can't find the object", Point(100, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
-            }
-
+                std::cout << "--(!)Lost Target" << std::endl;
+                //return 0;
+            }        
             else
             {
-                putText(frame, "Found the object", Point(100, 100), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,0,225),2);
-                bbox.x = drones[0].x;  			bbox.y = drones[0].y;
-                bbox.width = drones[0].width; 		bbox.height = drones[0].height;
-
-                putText(frame, "Center - x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , Point(300, 50), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,225),2);
+                cv::putText(frame, "Found the object", cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+                bbox = faces[0];
+                cv::putText(frame, "Center - x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , cv::Point(300, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,225),2);
                 trackFail = true;
             }
         }
             
         // Display tracker type on frame
-        putText(frame, trackerType + " Tracker", Point(100,20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50,170,50),2);
+        cv::putText(frame, trackerType + " Tracker", cv::Point(100,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
 
         // Display FPS on frame
-        putText(frame, "FPS : " + SSTR(int(fps)), Point(100,50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50,170,50), 2);
+        cv::putText(frame, "FPS : " + SSTR(int(fps)), cv::Point(100,50), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50), 2);
 
         // Display frame.
-        imshow("Tracking", frame);
+        cv::imshow("Tracking", frame);
 
         // Exit if ESC pressed.
-        if(waitKey(1) == 27)
+        if(cv::waitKey(1) == 27)
         {
             break;
         }
@@ -391,78 +327,18 @@ int Track::kcf()
 }
 
 
-//Task:detect the drone from a live video input
-//Input:any video (with or without drone)
-//Output:successfully detect the drone from the video stream
-int Track::test()
-{
-	String drone_cascade_name = "face.xml";//swap with the drone training data
-	CascadeClassifier drone_cascade;
-	Mat frame;
-
-    if(!drone_cascade.load(drone_cascade_name))
-	{ 
-        cout <<"--(!)Error loading drone cascade\n" << endl; 
-		return 1;
-    }
-
-	//VideoCapture video(0);
-	VideoCapture video("test/0001.webm");
-
-    if(!video.isOpened())
-    {
-        cout << "Could not read video file" << endl;
-        return 1;
-    }
-
-    //Read first frame
-    video >> frame;
-	
-	while(video.read(frame))
-	{
-        if( frame.empty() )
-        {
-            cout << " --(!) No captured frame -- Break!" << endl;
-            break;
-        }
-
-        //function from here
-
-        std::vector<Rect> drones;
-        Mat frame_gray;
-
-        cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
-        equalizeHist( frame_gray, frame_gray );
-
-        //-- Detect drones
-        drone_cascade.detectMultiScale( frame_gray, drones, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
-
-        for ( size_t i = 0; i < drones.size(); i++ )
-        {
-            Point center( drones[i].x + drones[i].width/2, drones[i].y + drones[i].height/2 );
-            ellipse( frame, center, Size( drones[i].width/2, drones[i].height/2 ), 0, 0, 360, Scalar( 255, 0, 255 ), 4, 8, 0 );
-
-            //Mat droneROI = frame_gray(drones[i]);
-        }
-
-        //-- Show what you got
-        imshow( "Drone detection", frame );
-
-        if( waitKey(1) == 27 ) 
-        { 
-            break; 
-        } 
-	}
-
-	return 0;
-}
-
 
 //Task:
 //Input:
 //Output:
 void Track::display()
 {
-
-    cout << "Tracking" << endl;
+    std::cout << "\n-----Tracking Location data-----" << std::endl;
+    std::cout << "Coordinate X: " << target.x << std::endl;
+    std::cout << "Coordinate Y: " << target.y << std::endl;
+    std::cout << "Width: " << target.width << std::endl;
+    std::cout << "Height: " << target.height << std::endl << std::endl;
+    std::cout << "Point Center: (" << target_point.x << ", " << target_point.y << ")" << std::endl;
+    std::cout << "-----------------------------------" << std::endl << std::endl;
+    
 }
