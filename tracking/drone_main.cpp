@@ -3,7 +3,9 @@
 
 #include "drone.h"
 
-
+//XXX will not be calling this from control_flow in upper directory. this will 
+//XXX only be used for testing purposes. Track class should be treated as a library possibly
+//XXX or we pass bounding box info to pursuit from tracking function
 
 //Task:
 //Input:
