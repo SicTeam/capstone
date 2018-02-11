@@ -34,3 +34,15 @@
 # ROS
 build/
 devel/
+
+/tracking/detect
+
+# CMake Files
+*.cmake
+/build/
+/CMakeCache.txt
+/Makefile
+/CMakeFiles/
+/tracking/CMakeCache.txt
+/tracking/Makefile
+/tracking/CMakeFiles/
