@@ -52,7 +52,7 @@ cd $HOME
 OPENCV_BUILD=$HOME/opencv_build
 OPENCV_VERSION="3.2.0"
 SKIP_OPENCV=false
-OPENCV_CMAKE=cmake \
+OPENCV_CMAKE="cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DBUILD_PNG=OFF \
@@ -84,7 +84,7 @@ OPENCV_CMAKE=cmake \
     -DINSTALL_TESTS=ON \
     -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
     -DOPENCV_TEST_DATA_PATH=../opencv_extra/testdata \
-    ../
+    ../"
 
 
 # Check for existance of opencv
@@ -101,7 +101,7 @@ fi
 
 echo "OpenCV not found, preparing to build"
 
-if [ ! -d "$OPENCV_BUILD" && "$SKIP_OPENCV" = false ]; then
+if [ ! -d "$OPENCV_BUILD" && ! $SKIP_OPENCV ]; then
     mkdir -p $OPENCV_BUILD
     cd $OPENCV_BUILD
     echo " Cloning opencv.."
@@ -119,7 +119,7 @@ if [ ! -d "$OPENCV_BUILD" && "$SKIP_OPENCV" = false ]; then
     cd opencv_contrib
     git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
 
-elif [ "$SKIP_OPENCV" = false ]; then 
+elif [ ! $SKIP_OPENCV ]; then 
     echo " Updating opencv sources "
 
     cd $OPENCV_BUILD/opencv
@@ -135,7 +135,7 @@ elif [ "$SKIP_OPENCV" = false ]; then
     git pull
 fi
 
-if [ "$SKIP_OPENCV" = false ]; then
+if [ ! $SKIP_OPENCV ]; then
     # Build opencv from source
     cd $OPENCV_BUILD/opencv
     mkdir build
