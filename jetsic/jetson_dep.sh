@@ -22,7 +22,7 @@ echo "  2. ROS Base and Required Packages for skyNET "
 
 #Install OpenCV and its dependencies
 # This part of the script is from https://raw.githubusercontent.com/jetsonhacks/buildOpenCVTX1/master/buildOpenCV.sh
-echo "1. Installing OpenCV3.2... " 
+echo "1. Installing OpenCV3.2... "
 cd $HOME
 sudo apt-get install -y \
     libglew-dev \
@@ -45,7 +45,7 @@ sudo apt-get install -y \
 # Python 2.7
 sudo apt-get install -y python-dev python-numpy python-py python-pytest
 # GStreamer support
-sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev 
+sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 # TODO Gstreamer "plugins-bad" needed for ROS?
 
 cd $HOME
@@ -82,7 +82,7 @@ OPENCV_CMAKE="cmake \
     -DCUDA_ARCH_PTX="" \
     -DINSTALL_C_EXAMPLES=ON \
     -DINSTALL_TESTS=ON \
-    -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
+    -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
     -DOPENCV_TEST_DATA_PATH=../opencv_extra/testdata \
     ../"
 
@@ -119,7 +119,7 @@ if [ ! -d "$OPENCV_BUILD" ] && [ "$SKIP_OPENCV" = false ]; then
     cd opencv_contrib
     git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
 
-elif [ "$SKIP_OPENCV" = false ]; then 
+elif [ "$SKIP_OPENCV" = false ]; then
     echo " Updating opencv sources "
 
     cd $OPENCV_BUILD/opencv
@@ -188,7 +188,7 @@ sudo apt-get update
 # Install ROS base and MAVROS
 sudo apt-get install -y ros-kinetic-ros-base ros-kinetic-mavros ros-kinetic-mavros-extras
 
-sudo apt-get install -y ros-kinetic-vision-opencv 
+sudo apt-get install -y ros-kinetic-vision-opencv
 #ros-kinetic-PACKAGE \
 
 # For some reason, SSL certificates get messed up on TX1 so Python scripts like rosdep will fail. Rehash the certs.
