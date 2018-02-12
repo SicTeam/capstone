@@ -116,8 +116,26 @@ int Track::kcf(char * vid)
     
     //set tracker
     std::string trackerType = trackerTypes[2];
-    tracker = cv::Tracker::create(trackerType);
-
+    
+    #if (CV_MINOR_VERSION < 3)
+    {
+        tracker = cv::Tracker::create(trackerType);
+    }
+    #else
+    {
+        if (trackerType == "BOOSTING")
+            tracker = TrackerBoosting::create();
+        if (trackerType == "MIL")
+            tracker = TrackerMIL::create();
+        if (trackerType == "KCF")
+            tracker = TrackerKCF::create();
+        if (trackerType == "TLD")
+            tracker = TrackerTLD::create();
+        if (trackerType == "MEDIANFLOW")
+            tracker = TrackerMedianFlow::create();
+    }
+    #endif
+    
     //Read video from a video clip
     cv::VideoCapture video(vid);
 
@@ -236,8 +254,25 @@ int Track::kcf()
     bool trackFail = false;
 
     //create tracker
-    tracker = cv::Tracker::create(trackerType);
-
+    #if (CV_MINOR_VERSION < 3)
+    {
+        tracker = cv::Tracker::create(trackerType);
+    }
+    #else
+    {
+        if (trackerType == "BOOSTING")
+            tracker = TrackerBoosting::create();
+        if (trackerType == "MIL")
+            tracker = TrackerMIL::create();
+        if (trackerType == "KCF")
+            tracker = TrackerKCF::create();
+        if (trackerType == "TLD")
+            tracker = TrackerTLD::create();
+        if (trackerType == "MEDIANFLOW")
+            tracker = TrackerMedianFlow::create();
+    }
+    #endif
+    
     //Read video from a camera
     cv::VideoCapture video(0);
 
