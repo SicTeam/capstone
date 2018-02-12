@@ -191,7 +191,7 @@ int Track::kcf(char * vid)
             if(!detect(drones, frame))
             {
                 std::cout << "--(!)Lost Target" << std::endl;
-                return 0;
+                //return 0;
             }
             else
             {
