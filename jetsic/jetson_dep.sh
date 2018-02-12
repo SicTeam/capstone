@@ -101,7 +101,7 @@ fi
 
 echo "OpenCV not found, preparing to build"
 
-if [ ! -d "$OPENCV_BUILD" && ! $SKIP_OPENCV ]; then
+if [ ! -d "$OPENCV_BUILD" ] && [ "$SKIP_OPENCV" = false ]; then
     mkdir -p $OPENCV_BUILD
     cd $OPENCV_BUILD
     echo " Cloning opencv.."
@@ -119,7 +119,7 @@ if [ ! -d "$OPENCV_BUILD" && ! $SKIP_OPENCV ]; then
     cd opencv_contrib
     git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
 
-elif [ ! $SKIP_OPENCV ]; then 
+elif [ "$SKIP_OPENCV" = false ]; then 
     echo " Updating opencv sources "
 
     cd $OPENCV_BUILD/opencv
@@ -135,7 +135,7 @@ elif [ ! $SKIP_OPENCV ]; then
     git pull
 fi
 
-if [ ! $SKIP_OPENCV ]; then
+if [ "$SKIP_OPENCV" = false ]; then
     # Build opencv from source
     cd $OPENCV_BUILD/opencv
     mkdir build
