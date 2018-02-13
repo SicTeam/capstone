@@ -79,11 +79,11 @@ OPENCV_CMAKE="cmake \
     -DWITH_OPENEXR=OFF \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0 \
     -DCUDA_ARCH_BIN=5.3 \
-    -DCUDA_ARCH_PTX="" \
+    -DCUDA_ARCH_PTX=\"\" \
     -DINSTALL_C_EXAMPLES=ON \
     -DINSTALL_TESTS=ON \
     -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
-    -DOPENCV_TEST_DATA_PATH=../opencv_extra/testdata \
+    -DOPENCV_TEST_DATA_PATH=../../opencv_extra/testdata \
     ../"
 
 
