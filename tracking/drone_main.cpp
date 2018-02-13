@@ -15,7 +15,7 @@ int main(int argc, char ** argv)
     Track drone_track;
     
     std::cout << "OpenCV Version: " << CV_VERSION << std::endl;
-
+    std::cout << "OpenCV Minor Version: " << CV_MINOR_VERSION << std:: endl;
     //for testing the detection
 //    drone_track.detect_image();
 
