@@ -120,6 +120,8 @@ if [ ! -d "$OPENCV_BUILD" ] && [ "$SKIP_OPENCV" = false ]; then
     git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
 
 elif [ "$SKIP_OPENCV" = false ]; then
+    #TODO stop it from reaching this branch if git clone failed
+
     echo " Updating opencv sources "
 
     cd $OPENCV_BUILD/opencv
