@@ -140,13 +140,11 @@ if [ "$SKIP_OPENCV" = false ]; then
     cd $OPENCV_BUILD/opencv
     mkdir build
     cd build
-    eval $OPENCV_CMAKE
+    exec $OPENCV_CMAKE
 
     # Consider running jetson_clocks.sh before compiling
-    echo "making..."
     make -j4
 
-    echo "make installing..."
     sudo make install
 
     # Verify install
@@ -155,11 +153,9 @@ if [ "$SKIP_OPENCV" = false ]; then
         exit
     fi
 
-    echo "Make clean..."
     make clean
 
     # TODO Can this remove be done in a safer manner?
-    echo "Removing build dir: $OPENCV_BUILD"
     cd $HOME
     sudo rm -rf $OPENCV_BUILD
 
