@@ -192,6 +192,9 @@ int Track::kcf(char * vid)
         //XXX Always returns true????
         //Update tracking result
         bool ok = tracker->update(frame, bbox);
+
+	if(bbox.x < 50 || bbox.x > 600 || bbox.y < 50 || bbox.y > 450)
+		ok = false;
         
         //Calculate Frames per second
         float fps = cv::getTickFrequency() / ((double)cv::getTickCount() - timer);
@@ -245,8 +248,8 @@ int Track::kcf(char * vid)
 //Output: Outputs video frame by frame showing tracking of object
 int Track::kcf()
 {
-    std::string trackerType = "MEDIANFLOW";
-    //std::string trackerType = "KCF";
+    //std::string trackerType = "MEDIANFLOW";
+    std::string trackerType = "KCF";
     std::vector<cv::Rect> faces;   
     cv::Ptr<cv::Tracker> tracker;
     cv::Mat frame; //holds video frame
@@ -313,6 +316,9 @@ int Track::kcf()
         
         //Update tracking result
         bool ok = tracker->update(frame, bbox);
+
+	if(bbox.x < 50 || bbox.x > 600 || bbox.y < 50 || bbox.y > 450)
+		ok = false;
         
         //Calculate Frames per second
         float fps = cv::getTickFrequency() / ((double)cv::getTickCount() - timer);
@@ -321,7 +327,10 @@ int Track::kcf()
         {
             //Tracking success: draw tracked object
             rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
+            cv::putText(frame, "x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , cv::Point(300, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,225),2);
         }
+
+
 
         else
         {
