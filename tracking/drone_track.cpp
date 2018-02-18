@@ -26,7 +26,7 @@ Track::Track()
 //Output:
 Track::Track(std::string file_name)
 {
-    min_neighbors = 3;//the higher this number the more strict detection is
+    min_neighbors = 2;//the higher this number the more strict detection is
     cascade_name = file_name;
     if(!cascade.load(cascade_name))
     {
@@ -124,15 +124,15 @@ int Track::kcf(char * vid)
     #else
     {
         if (trackerType == "BOOSTING")
-            tracker = TrackerBoosting::create();
+            tracker = cv::TrackerBoosting::create();
         if (trackerType == "MIL")
-            tracker = TrackerMIL::create();
+            tracker = cv::TrackerMIL::create();
         if (trackerType == "KCF")
-            tracker = TrackerKCF::create();
+            tracker = cv::TrackerKCF::create();
         if (trackerType == "TLD")
-            tracker = TrackerTLD::create();
+            tracker = cv::TrackerTLD::create();
         if (trackerType == "MEDIANFLOW")
-            tracker = TrackerMedianFlow::create();
+            tracker = cv::TrackerMedianFlow::create();
     }
     #endif
     

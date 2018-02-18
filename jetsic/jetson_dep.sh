@@ -79,11 +79,11 @@ OPENCV_CMAKE="cmake \
     -DWITH_OPENEXR=OFF \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0 \
     -DCUDA_ARCH_BIN=5.3 \
-    -DCUDA_ARCH_PTX="" \
+    -DCUDA_ARCH_PTX=\"\" \
     -DINSTALL_C_EXAMPLES=ON \
     -DINSTALL_TESTS=ON \
     -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
-    -DOPENCV_TEST_DATA_PATH=../opencv_extra/testdata \
+    -DOPENCV_TEST_DATA_PATH=../../opencv_extra/testdata \
     ../"
 
 
@@ -120,6 +120,8 @@ if [ ! -d "$OPENCV_BUILD" ] && [ "$SKIP_OPENCV" = false ]; then
     git checkout -b v$OPENCV_VERSION $OPENCV_VERSION
 
 elif [ "$SKIP_OPENCV" = false ]; then
+    #TODO stop it from reaching this branch if git clone failed
+
     echo " Updating opencv sources "
 
     cd $OPENCV_BUILD/opencv
@@ -140,11 +142,13 @@ if [ "$SKIP_OPENCV" = false ]; then
     cd $OPENCV_BUILD/opencv
     mkdir build
     cd build
-    exec $OPENCV_CMAKE
+    eval $OPENCV_CMAKE
 
     # Consider running jetson_clocks.sh before compiling
+    echo "making..."
     make -j4
 
+    echo "make installing..."
     sudo make install
 
     # Verify install
@@ -153,9 +157,11 @@ if [ "$SKIP_OPENCV" = false ]; then
         exit
     fi
 
+    echo "Make clean..."
     make clean
 
     # TODO Can this remove be done in a safer manner?
+    echo "Removing build dir: $OPENCV_BUILD"
     cd $HOME
     sudo rm -rf $OPENCV_BUILD
 
