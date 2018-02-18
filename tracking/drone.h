@@ -32,6 +32,7 @@ class Track
         void display();
 
     private:
+        void createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trackerType);
         cv::Rect target;
         cv::Point target_point;
         cv::CascadeClassifier cascade;
