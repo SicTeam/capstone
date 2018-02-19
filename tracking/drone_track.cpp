@@ -193,7 +193,7 @@ int Track::kcf(char * vid)
         //Update tracking result
         bool ok = tracker->update(frame, bbox);
 
-	if(bbox.x < 50 || bbox.x > 600 || bbox.y < 50 || bbox.y > 450)
+	if(bbox.x < 50 || bbox.x > (frame.rows - 50) || bbox.y < 50 || bbox.y > (frame.cols - 50))
 		ok = false;
         
         //Calculate Frames per second
@@ -300,6 +300,8 @@ int Track::kcf()
     rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
     tracker->init(frame, bbox);
     
+    //std::cout << "Width :" << frame.cols << " Height: " << frame.rows  << std::endl;
+
     while(video.read(frame)) 
     {
         if(trackFail)
@@ -317,7 +319,8 @@ int Track::kcf()
         //Update tracking result
         bool ok = tracker->update(frame, bbox);
 
-	if(bbox.x < 50 || bbox.x > 600 || bbox.y < 50 || bbox.y > 450)
+
+	if(bbox.x < 50 || bbox.x > (frame.rows - 50) || bbox.y < 50 || bbox.y > (frame.cols - 50))
 		ok = false;
         
         //Calculate Frames per second
@@ -329,8 +332,6 @@ int Track::kcf()
             rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
             cv::putText(frame, "x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , cv::Point(300, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,225),2);
         }
-
-
 
         else
         {
