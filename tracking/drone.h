@@ -38,4 +38,5 @@ class Track
         cv::CascadeClassifier cascade;
         std::string cascade_name;
         int min_neighbors;        
+	bool cam2_detect;
 };

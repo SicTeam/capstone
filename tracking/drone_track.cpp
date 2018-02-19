@@ -17,6 +17,7 @@ Track::Track()
     {
         std::cout << "FAIL" << std::endl;
     }
+    //cam2_detect = false; 
 }
 
 
@@ -32,6 +33,8 @@ Track::Track(std::string file_name)
     {
         std::cout << "FAIL" << std::endl;
     }
+
+    cam2_detect = false; 
 }
 
 
@@ -132,6 +135,7 @@ int Track::kcf(char * vid)
     cv::Ptr<cv::Tracker> tracker;
     cv::Mat frame; //holds video frame
     cv::Rect2d bbox;
+    cv::Rect2d origin_box;
     bool trackFail = false;
     
     createTracker(tracker, trackerType);
@@ -157,6 +161,7 @@ int Track::kcf(char * vid)
     }
 
     bbox = drones[0];
+    origin_box.x = bbox.x ; origin_box.y = bbox.y; origin_box.width = bbox.width; origin_box.height = bbox.height; 
     rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
     tracker->init(frame, bbox);
 
@@ -222,6 +227,9 @@ int Track::kcf(char * vid)
                 trackFail = true;
             } 
         }
+
+	//show the scale difference between original box vs current box
+        cv::putText(frame, "Scale: " + SSTR(double((bbox.width * bbox.height) / (origin_box.width * origin_box.height) *100 )) + "%", cv::Point(400,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
         
         // Display tracker type on frame
         cv::putText(frame, trackerType + " Tracker", cv::Point(100,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
@@ -248,12 +256,15 @@ int Track::kcf(char * vid)
 //Output: Outputs video frame by frame showing tracking of object
 int Track::kcf()
 {
-    //std::string trackerType = "MEDIANFLOW";
-    std::string trackerType = "KCF";
+    std::string trackerType = "MEDIANFLOW";
+    //std::string trackerType = "KCF";
     std::vector<cv::Rect> faces;   
     cv::Ptr<cv::Tracker> tracker;
     cv::Mat frame; //holds video frame
     cv::Rect2d bbox;
+    cv::Rect2d origin_box;
+
+ 
     bool trackFail = false;
 
     createTracker(tracker, trackerType);
@@ -268,6 +279,22 @@ int Track::kcf()
         return 1;
     }
 
+    //second camera code
+    cv::Mat frame2; 
+    std::vector<cv::Rect> faces2;   
+    
+    bool second_cam = true;
+
+    cv::VideoCapture video2(1);
+    if(!video2.isOpened())
+    {
+	second_cam = false;
+        std::cout << "--(!)Could not read video2 or not having 2nd camera" << std::endl;
+       // return 1;
+    }
+    if(second_cam)
+    	video2 >> frame2;
+
     //Read first frame
     video >> frame;
     
@@ -278,7 +305,11 @@ int Track::kcf()
         return 0;
     }
 
+    //from the detect function, we get face object(s), point the bbox to first one
     bbox = faces[0];
+
+    //compare the side of bounding box, however it only work with MEDIANFLOW tracker.
+    origin_box.x = bbox.x ; origin_box.y = bbox.y; origin_box.width = bbox.width; origin_box.height = bbox.height; 
     rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
     tracker->init(frame, bbox);
     
@@ -333,6 +364,10 @@ int Track::kcf()
                 trackFail = true;
             }
         }
+
+	//show the scale difference between original box vs current box
+        cv::putText(frame, "Scale: " + SSTR(double((bbox.width * bbox.height) / (origin_box.width * origin_box.height) *100 )) + "%", cv::Point(400,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
+	
             
         // Display tracker type on frame
         cv::putText(frame, trackerType + " Tracker", cv::Point(100,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
@@ -342,6 +377,17 @@ int Track::kcf()
 
         // Display frame.
         cv::imshow("Tracking", frame);
+
+	if(second_cam)
+	{
+		video2.read(frame2);	
+            	if(detect(faces2, frame2))
+            	{
+			cam2_detect = true;	
+                	std::cout << "--Second camera found the target" << std::endl;
+            	}        
+			cam2_detect = false;	
+	}
 
         // Exit if ESC pressed.
         if(cv::waitKey(1) == 27)

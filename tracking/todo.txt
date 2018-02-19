@@ -3,3 +3,4 @@ To do List
 1) Need to come up with automated testing suit
     a)Look into Cmake's Ctest
 2) How to compile test from outside directory using cmake/make
+3) Figure out the interaction between two cameras
