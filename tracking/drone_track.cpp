@@ -101,28 +101,11 @@ int Track::detect(std::vector<cv::Rect> & drones, cv::Mat frame)
 }
 
 
-//XXX No tracking failure so it doesn't detect
-//Task:   Allows tracking of object through video passed in
-//Input:  Takes in video stored in testing directory
-//Output: Displays video frame by frame while tracking selected object
-int Track::kcf(char * vid)
-{
-    std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
-    std::vector<cv::Rect> drones;
-    cv::Ptr<cv::Tracker> tracker;
-    cv::Mat frame; //holds video frame
-    cv::Rect2d bbox;
-    bool trackFail = false;
-    
-    //set tracker
-    std::string trackerType = trackerTypes[2];
-    
+void Track::createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trackerType) {
+
     #if (CV_MINOR_VERSION < 3)
-    {
         tracker = cv::Tracker::create(trackerType);
-    }
     #else
-    {
         if (trackerType == "BOOSTING")
             tracker = cv::TrackerBoosting::create();
         if (trackerType == "MIL")
@@ -133,9 +116,26 @@ int Track::kcf(char * vid)
             tracker = cv::TrackerTLD::create();
         if (trackerType == "MEDIANFLOW")
             tracker = cv::TrackerMedianFlow::create();
-    }
     #endif
+ 
+}
+
+//XXX No tracking failure so it doesn't detect
+//Task:   Allows tracking of object through video passed in
+//Input:  Takes in video stored in testing directory
+//Output: Displays video frame by frame while tracking selected object
+int Track::kcf(char * vid)
+{
+    std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
+    std::string trackerType = trackerTypes[2];
+    std::vector<cv::Rect> drones;
+    cv::Ptr<cv::Tracker> tracker;
+    cv::Mat frame; //holds video frame
+    cv::Rect2d bbox;
+    bool trackFail = false;
     
+    createTracker(tracker, trackerType);
+
     //Read video from a video clip
     cv::VideoCapture video(vid);
 
@@ -180,7 +180,7 @@ int Track::kcf(char * vid)
         if(trackFail)
         {
             cv::putText(frame, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
-            tracker = cv::Tracker::create(trackerType);
+            createTracker(tracker, trackerType);
             tracker->init(frame, bbox);
             rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
             trackFail = false;
@@ -256,25 +256,7 @@ int Track::kcf()
     cv::Rect2d bbox;
     bool trackFail = false;
 
-    //create tracker
-    #if (CV_MINOR_VERSION < 3)
-    {
-        tracker = cv::Tracker::create(trackerType);
-    }
-    #else
-    {
-        if (trackerType == "BOOSTING")
-            tracker = TrackerBoosting::create();
-        if (trackerType == "MIL")
-            tracker = TrackerMIL::create();
-        if (trackerType == "KCF")
-            tracker = TrackerKCF::create();
-        if (trackerType == "TLD")
-            tracker = TrackerTLD::create();
-        if (trackerType == "MEDIANFLOW")
-            tracker = TrackerMedianFlow::create();
-    }
-    #endif
+    createTracker(tracker, trackerType);
     
     //Read video from a camera
     cv::VideoCapture video(0);
@@ -307,7 +289,7 @@ int Track::kcf()
         if(trackFail)
         {
             cv::putText(frame, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
-            tracker = cv::Tracker::create(trackerType);
+            createTracker(tracker, trackerType);
             tracker->init(frame, bbox);
             rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
             trackFail = false;
