@@ -25,7 +25,7 @@ class Track
     public:
         Track();
         Track(std::string file_name);
-        int detect_image();
+        int detect_image(std::string image);
         int detect(std::vector<cv::Rect> & drones, cv::Mat frame);
         int kcf(char * vid);
         int kcf();

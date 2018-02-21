@@ -39,15 +39,14 @@ Track::Track(std::string file_name)
 //Task: Detects drone from test images
 //Input:
 //Output:
-int Track::detect_image()
+int Track::detect_image(std::string image)
 {
-    //String image("test/test_image/1.jpeg");
-    cv::VideoCapture video("test/Video_1.avi");
+    //cv::VideoCapture video("test/Video_1.avi");
     std::vector<cv::Rect> drones;
     cv::Mat frame;
 
-    video >> frame;
-    //frame = imread( image, IMREAD_COLOR);
+    //video >> frame;
+    frame = cv::imread( image, cv::IMREAD_COLOR);
 
     if(!detect(drones, frame))
     {
