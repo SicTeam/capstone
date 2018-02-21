@@ -283,7 +283,7 @@ int Track::kcf()
     cv::Mat frame2; 
     std::vector<cv::Rect> faces2;   
     
-    bool second_cam = true;
+    bool second_cam = true; //tell if the second cam is on/off
 
     cv::VideoCapture video2(1);
     if(!video2.isOpened())
@@ -315,7 +315,7 @@ int Track::kcf()
     
     //std::cout << "Width :" << frame.cols << " Height: " << frame.rows  << std::endl;
 
-    while(video.read(frame)) 
+    while(video.read(frame))
     {
         if(trackFail)
         {
@@ -380,13 +380,19 @@ int Track::kcf()
 
 	if(second_cam)
 	{
-		video2.read(frame2);	
+		video2.read(frame2);
+	
             	if(detect(faces2, frame2))
             	{
 			cam2_detect = true;	
-                	std::cout << "--Second camera found the target" << std::endl;
+                	std::cout << "--Second camera found the target. Cam2_detect value : " << cam2_detect << std::endl;
             	}        
+		
+		else
+		{
 			cam2_detect = false;	
+		}
+        cv::imshow("Second cam detection", frame2);
 	}
 
         // Exit if ESC pressed.
