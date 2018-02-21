@@ -26,7 +26,7 @@ Track::Track()
 //Output:
 Track::Track(std::string file_name)
 {
-    min_neighbors = 2;//the higher this number the more strict detection is
+    min_neighbors = 3;//the higher this number the more strict detection is
     cascade_name = file_name;
     if(!cascade.load(cascade_name))
     {
@@ -114,7 +114,7 @@ int Track::kcf(char * vid)
     bool trackFail = false;
     
     //set tracker
-    std::string trackerType = trackerTypes[2];
+    std::string trackerType = trackerTypes[4];
     
     #if (CV_MINOR_VERSION < 3)
     {
@@ -179,7 +179,27 @@ int Track::kcf(char * vid)
         if(trackFail)
         {
             cv::putText(frame, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
-            tracker = cv::Tracker::create(trackerType);
+            //tracker = cv::Tracker::create(trackerType);
+            
+            #if (CV_MINOR_VERSION < 3)
+            {
+                tracker = cv::Tracker::create(trackerType);
+            }
+            #else
+            {
+                if (trackerType == "BOOSTING")
+                    tracker = cv::TrackerBoosting::create();
+                if (trackerType == "MIL")
+                    tracker = cv::TrackerMIL::create();
+                if (trackerType == "KCF")
+                    tracker = cv::TrackerKCF::create();
+                if (trackerType == "TLD")
+                    tracker = cv::TrackerTLD::create();
+                if (trackerType == "MEDIANFLOW")
+                    tracker = cv::TrackerMedianFlow::create();
+            }
+            #endif
+            
             tracker->init(frame, bbox);
             rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
             trackFail = false;
@@ -204,18 +224,18 @@ int Track::kcf(char * vid)
         {
             //Tracking failure
             cv::putText(frame, "Tracking Failure Detected", cv::Point(100, 80), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
-            
+            trackFail = true;
+
             if(!detect(drones, frame))
             {
                 std::cout << "--(!)Lost Target" << std::endl;
-                return 0;
+                //return 0;
             }
             else
             {
                 cv::putText(frame, "Found the object", cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
                 bbox = drones[0];
                 cv::putText(frame, "Center - x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , cv::Point(300, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,225),2);
-                trackFail = true;
             } 
         }
         
@@ -260,15 +280,15 @@ int Track::kcf()
     #else
     {
         if (trackerType == "BOOSTING")
-            tracker = TrackerBoosting::create();
+            tracker = cv::TrackerBoosting::create();
         if (trackerType == "MIL")
-            tracker = TrackerMIL::create();
+            tracker = cv::TrackerMIL::create();
         if (trackerType == "KCF")
-            tracker = TrackerKCF::create();
+            tracker = cv::TrackerKCF::create();
         if (trackerType == "TLD")
-            tracker = TrackerTLD::create();
+            tracker = cv::TrackerTLD::create();
         if (trackerType == "MEDIANFLOW")
-            tracker = TrackerMedianFlow::create();
+            tracker = cv::TrackerMedianFlow::create();
     }
     #endif
     
@@ -301,7 +321,27 @@ int Track::kcf()
         if(trackFail)
         {
             cv::putText(frame, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
-            tracker = cv::Tracker::create(trackerType);
+            //tracker = cv::Tracker::create(trackerType);
+ 	        
+            #if (CV_MINOR_VERSION < 3)
+            {
+                tracker = cv::Tracker::create(trackerType);
+            }
+            #else
+            {
+                if (trackerType == "BOOSTING")
+                    tracker = cv::TrackerBoosting::create();
+                if (trackerType == "MIL")
+                    tracker = cv::TrackerMIL::create();
+                if (trackerType == "KCF")
+                    tracker = cv::TrackerKCF::create();
+                if (trackerType == "TLD")
+                    tracker = cv::TrackerTLD::create();
+                if (trackerType == "MEDIANFLOW")
+                    tracker = cv::TrackerMedianFlow::create();
+            }
+            #endif
+            
             tracker->init(frame, bbox);
             rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
             trackFail = false;
