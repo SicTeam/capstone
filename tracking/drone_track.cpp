@@ -179,7 +179,7 @@ int Track::kcf(char * vid)
         if(trackFail)
         {
             cv::putText(frame, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
-            tracker = cv::Tracker::create(trackerType);
+            //tracker = cv::Tracker::create(trackerType);
             tracker->init(frame, bbox);
             rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
             trackFail = false;
@@ -301,7 +301,7 @@ int Track::kcf()
         if(trackFail)
         {
             cv::putText(frame, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
-            tracker = cv::Tracker::create(trackerType);
+            //tracker = cv::Tracker::create(trackerType);
             tracker->init(frame, bbox);
             rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
             trackFail = false;
