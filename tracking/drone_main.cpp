@@ -19,6 +19,8 @@ int main(int argc, char ** argv)
     //for testing the detection
 //    drone_track.detect_image();
 
+    drone_track.detect_image(argv[1]);
+
     //detect/track off video passed in, else use live video feed
     if(argv[1])
     {

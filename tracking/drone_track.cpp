@@ -27,7 +27,7 @@ Track::Track()
 //Output:
 Track::Track(std::string file_name)
 {
-    min_neighbors = 2;//the higher this number the more strict detection is
+    min_neighbors = 3;//the higher this number the more strict detection is
     cascade_name = file_name;
     if(!cascade.load(cascade_name))
     {
@@ -130,7 +130,7 @@ void Track::createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trac
 int Track::kcf(char * vid)
 {
     std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
-    std::string trackerType = trackerTypes[2];
+    std::string trackerType = trackerTypes[4];
     std::vector<cv::Rect> drones;
     cv::Ptr<cv::Tracker> tracker;
     cv::Mat frame; //holds video frame
@@ -211,6 +211,7 @@ int Track::kcf(char * vid)
         }
         else
         {
+            trackFail = true;
             //Tracking failure
             cv::putText(frame, "Tracking Failure Detected", cv::Point(100, 80), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
             
@@ -224,7 +225,6 @@ int Track::kcf(char * vid)
                 cv::putText(frame, "Found the object", cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
                 bbox = drones[0];
                 cv::putText(frame, "Center - x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , cv::Point(300, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,225),2);
-                trackFail = true;
             } 
         }
 
@@ -348,6 +348,7 @@ int Track::kcf()
 
         else
         {
+            trackFail = true;
             //Tracking failure
             cv::putText(frame, "Tracking Failure Detected", cv::Point(100, 80), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
             
@@ -361,7 +362,6 @@ int Track::kcf()
                 cv::putText(frame, "Found the object", cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
                 bbox = faces[0];
                 cv::putText(frame, "Center - x: " + SSTR(int(bbox.x)) + "  y:" + SSTR(int(bbox.y)) , cv::Point(300, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,225),2);
-                trackFail = true;
             }
         }
 
