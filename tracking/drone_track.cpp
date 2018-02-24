@@ -38,6 +38,31 @@ Track::Track(std::string file_name)
 }
 
 
+//Task: Detects drone from test images
+//Input:
+//Output:
+int Track::detect_image(std::string image)
+{
+    //String image("test/test_image/1.jpeg");
+    //cv::VideoCapture video("test/Video_1.avi");
+    std::vector<cv::Rect> drones;
+    cv::Mat frame;
+
+    //video >> frame;
+    frame = cv::imread( image, cv::IMREAD_COLOR);
+
+    if(!detect(drones, frame))
+    {
+        std::cout << "No object Detected" << std::endl;
+        return 0;
+    }
+
+    cv::namedWindow("Drone Detect", cv::WINDOW_AUTOSIZE);
+    cv::imshow("Drone Detect", frame);
+    cv::waitKey(0);
+
+    return 0;
+}
 
 //Task: Detects drone from test images
 //Input:
@@ -64,7 +89,6 @@ int Track::detect_image()
 
     return 0;
 }
-
 
 //Task:   Detects drones from video
 //Input:  Takes in a vector of drones of type Rect
