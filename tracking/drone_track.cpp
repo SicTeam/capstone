@@ -352,19 +352,18 @@ int Track::kcf(char * vid1 , char * vid2)
     
     while(frame_left.data || frame_right.data)
     {
-
 	video_left.read(frame_left);
 	video_right.read(frame_right);
 
 	if(!frame_left.data)
 	{
-		std::cout << "Left video is stopped" << std::endl;
+		//std::cout << "Left video is stopped" << std::endl;
 		left_cond = false;
 	}
 
 	if(!frame_right.data)
 	{
-		std::cout << "Right video is stopped" << std::endl;
+		//std::cout << "Right video is stopped" << std::endl;
 		right_cond = false;
 	}
 
@@ -474,7 +473,7 @@ int Track::kcf(char * vid1 , char * vid2)
 		cv::putText(frame_right, trackerType + " Tracker", cv::Point(100,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
 
 		// Display right frame.
-		if(frame_left.data)
+		if(frame_right.data)
 			cv::imshow("Right camera", frame_right);
 	}
 
@@ -485,8 +484,7 @@ int Track::kcf(char * vid1 , char * vid2)
 
 		target_point.x = (left_target_point.x + right_target_point.x) / 2;
 		target_point.y = (left_target_point.y + right_target_point.y)/2;
-
-		std::cout << "x: " << target_point.x << " y: " << target_point.y  << std::endl;
+		//std::cout << "x: " << target_point.x << " y: " << target_point.y  << std::endl;
 	}
 
 	else if(left_cond) //if only left camera work
@@ -495,8 +493,7 @@ int Track::kcf(char * vid1 , char * vid2)
 
 		target_point.x = left_target_point.x;
 		target_point.y = left_target_point.y;
-
-		std::cout << "x: " << target_point.x << " y: " << target_point.y  << std::endl;
+		//std::cout << "x: " << target_point.x << " y: " << target_point.y  << std::endl;
 	}
 
 	else if(right_cond) //if only right camera work
@@ -505,8 +502,7 @@ int Track::kcf(char * vid1 , char * vid2)
 
 		target_point.x = right_target_point.x;
 		target_point.y = right_target_point.y;
-
-		std::cout << "x: " << target_point.x << " y: " << target_point.y  << std::endl;
+		//std::cout << "x: " << target_point.x << " y: " << target_point.y  << std::endl;
 	}
 
         // Exit if ESC pressed.
