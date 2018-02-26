@@ -190,6 +190,8 @@ int Track::kcf(char * vid)
     tracker->init(frame, bbox);
 
     //TEST Store bounding box and center
+    //XXX don't use drones[0] to calculate center point, use bbox instead
+    //caz it drones[0] ONLY update when we use detect
     cv::Point center(drones[0].x + drones[0].width/2, drones[0].y + drones[0].height/2);
     target_point = center;
     target = drones[0];
@@ -273,7 +275,248 @@ int Track::kcf(char * vid)
     return 0;
 }
 
+//Task:   This function tracks using bounding box via 2 video streams
+//Input:  Receives camera feed from 2 videos
+//Output: Outputs video frame by frame showing tracking of object
+int Track::kcf(char * vid1 , char * vid2)
+{
+    std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
+    std::string trackerType = trackerTypes[4];
 
+    //left tracker init
+    std::vector<cv::Rect> drones_left;
+    cv::Ptr<cv::Tracker> tracker_left;
+    cv::Mat frame_left; //holds video frame
+    cv::Rect2d bbox_left;
+    cv::Rect2d origin_box_left;
+    bool trackFail_left = false;
+    bool left_cond = true; // to signal if the left camera still running
+
+    //right tracker init
+    std::vector<cv::Rect> drones_right;
+    cv::Ptr<cv::Tracker> tracker_right;
+    cv::Mat frame_right; //holds video frame
+    cv::Rect2d bbox_right;
+    cv::Rect2d origin_box_right;
+    bool trackFail_right = false;
+    bool right_cond = true;
+    
+    //tracker init
+    createTracker(tracker_left, trackerType);
+    createTracker(tracker_right, trackerType);
+
+    //Read video from a video clip
+    cv::VideoCapture video_left(vid1);
+    cv::VideoCapture video_right(vid2);
+
+    //Exit if video is not opened
+    if(!video_left.isOpened())
+    {
+        std::cout << "Could not read left video file" << std::endl;
+	return 1;
+    }
+    
+    if(!video_right.isOpened())
+    {
+        std::cout << "Could not read right video file" << std::endl;
+	return 1;
+    }
+
+    //take first frame
+    video_left >> frame_left;
+    video_right >> frame_right;
+
+    //detect object in frame
+    if(!detect(drones_left, frame_left))
+    {
+        std::cout << "--(!)No Initial Objects Detected" << std::endl;
+        return 0;
+    }
+
+    //detect object in frame
+    if(!detect(drones_right, frame_right))
+    {
+        std::cout << "--(!)No Initial Objects Detected" << std::endl;
+        return 0;
+    }
+
+    bbox_left = drones_left[0];
+    origin_box_left.x = bbox_left.x ; origin_box_left.y = bbox_left.y; origin_box_left.width = bbox_left.width; origin_box_left.height = bbox_left.height; 
+    rectangle(frame_left, bbox_left, cv::Scalar(225, 0, 0), 2, 1);
+    tracker_left->init(frame_left, bbox_left);
+    
+    bbox_right = drones_right[0];
+    origin_box_right.x = bbox_right.x ; origin_box_right.y = bbox_right.y; origin_box_right.width = bbox_right.width; origin_box_right.height = bbox_right.height; 
+    rectangle(frame_right, bbox_right, cv::Scalar(225, 0, 0), 2, 1);
+    tracker_right->init(frame_right, bbox_right);
+    
+    while(frame_left.data || frame_right.data)
+    {
+
+	video_left.read(frame_left);
+	video_right.read(frame_right);
+
+	if(!frame_left.data)
+	{
+		std::cout << "Left video is stopped" << std::endl;
+		left_cond = false;
+	}
+
+	if(!frame_right.data)
+	{
+		std::cout << "Right video is stopped" << std::endl;
+		right_cond = false;
+	}
+
+	if(left_cond)
+	{
+		if(trackFail_left) //re-init when left cam fail to track
+		{
+		    cv::putText(frame_left, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+		    createTracker(tracker_left, trackerType);
+		    tracker_left->init(frame_left, bbox_left);
+		    rectangle(frame_left, bbox_left, cv::Scalar(225, 0, 0), 2, 1);
+		    trackFail_left = false;
+		}
+
+		bool ok_left = tracker_left->update(frame_left, bbox_left);
+
+		if(bbox_left.x < 50 || bbox_left.x > (frame_left.rows - 50) || bbox_left.y < 50 || bbox_left.y > (frame_left.cols - 50))
+			ok_left = false;
+
+
+		//procedure for left cam
+		if(ok_left)
+		{
+		    //Tracking success: draw tracked object
+		    rectangle(frame_left, bbox_left, cv::Scalar(225, 0, 0), 2, 1);
+		}
+		else
+		{
+		    trackFail_left = true;
+		    //Tracking failure
+		    cv::putText(frame_left, "Tracking Failure Detected", cv::Point(100, 80), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+		    
+		    if(!detect(drones_left, frame_left))
+		    {
+			std::cout << "--(!)Left Camera Lost Target" << std::endl;
+		    }
+		    else
+		    {
+			cv::putText(frame_left, "Found the object", cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+			bbox_left = drones_left[0];
+		    } 
+		}
+
+		left_target_point.x = bbox_left.x + bbox_left.width/2;
+		left_target_point.y = bbox_left.y + bbox_left.height/2;
+		
+		cv::putText(frame_left, "Scale: " + SSTR(double((bbox_left.width * bbox_left.height) / (origin_box_left.width * origin_box_left.height) *100 )) + "%", cv::Point(400,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
+		//On LEFT cam
+		//Display tracker type on frame
+		cv::putText(frame_left, trackerType + " Tracker", cv::Point(100,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
+
+		// Display left frame.
+		if(frame_left.data)
+			cv::imshow("Left camera", frame_left);
+	}
+
+	if(right_cond)
+	{
+
+		if(trackFail_right) //re-init when right cam fail to track
+		{
+		    cv::putText(frame_right, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+		    createTracker(tracker_right, trackerType);
+		    tracker_right->init(frame_right, bbox_right);
+		    rectangle(frame_right, bbox_right, cv::Scalar(225, 0, 0), 2, 1);
+		    trackFail_right = false;
+		}
+	       
+		//Update tracking result
+		bool ok_right = tracker_right->update(frame_right, bbox_right);
+
+
+
+		if(bbox_right.x < 50 || bbox_right.x > (frame_right.rows - 50) || bbox_right.y < 50 || bbox_right.y > (frame_right.cols - 50))
+			ok_right = false;
+
+		//procedure for right cam
+		if(ok_right)
+		{
+		    //Tracking success: draw tracked object
+		    rectangle(frame_right, bbox_right, cv::Scalar(225, 0, 0), 2, 1);
+		}
+		else
+		{
+		    trackFail_right = true;
+		    //Tracking failure
+		    cv::putText(frame_right, "Tracking Failure Detected", cv::Point(100, 80), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+		    
+		    if(!detect(drones_right, frame_right))
+		    {
+			std::cout << "--(!)Right Camera Lost Target" << std::endl;
+		    }
+		    else
+		    {
+			cv::putText(frame_right, "Found the object", cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+			bbox_right = drones_right[0];
+		    } 
+		}
+		//calculate target coordinate on right screen
+		right_target_point.x = bbox_right.x + bbox_right.width/2;
+		right_target_point.y = bbox_right.y + bbox_right.height/2;
+
+		//show the scale difference between original box vs current box
+		cv::putText(frame_right, "Scale: " + SSTR(double((bbox_right.width * bbox_right.height) / (origin_box_right.width * origin_box_right.height) *100 )) + "%", cv::Point(400,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
+
+		// Display tracker type on frame
+		cv::putText(frame_right, trackerType + " Tracker", cv::Point(100,20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(50,170,50),2);
+
+		// Display right frame.
+		if(frame_left.data)
+			cv::imshow("Right camera", frame_right);
+	}
+
+
+	if(left_cond && right_cond)
+	{
+		//only calculate the final center point when left and right camera is opened
+
+		target_point.x = (left_target_point.x + right_target_point.x) / 2;
+		target_point.y = (left_target_point.y + right_target_point.y)/2;
+
+		std::cout << "x: " << target_point.x << " y: " << target_point.y  << std::endl;
+	}
+
+	else if(left_cond) //if only left camera work
+	{
+		//only calculate the final center point when left and right camera is opened
+
+		target_point.x = left_target_point.x;
+		target_point.y = left_target_point.y;
+
+		std::cout << "x: " << target_point.x << " y: " << target_point.y  << std::endl;
+	}
+
+	else if(right_cond) //if only right camera work
+	{
+		//only calculate the final center point when left and right camera is opened
+
+		target_point.x = right_target_point.x;
+		target_point.y = right_target_point.y;
+
+		std::cout << "x: " << target_point.x << " y: " << target_point.y  << std::endl;
+	}
+
+        // Exit if ESC pressed.
+        if(cv::waitKey(1) == 27)
+        {
+            break;
+        }
+    }
+    return 0;
+}
 
 //Task:   This function tracks using bounding box via video stream
 //Input:  Receives camera feed from local device
@@ -288,7 +531,8 @@ int Track::kcf()
     cv::Rect2d bbox;
     cv::Rect2d origin_box;
 
- 
+    int frame_count = 0;
+
     bool trackFail = false;
 
     createTracker(tracker, trackerType);
@@ -339,8 +583,22 @@ int Track::kcf()
     
     //std::cout << "Width :" << frame.cols << " Height: " << frame.rows  << std::endl;
 
+    frame.copyTo(mat_store[0]);	
+    frame.copyTo(mat_store[1]);
+
     while(video.read(frame))
     {
+	frame.copyTo(mat_store[0]);	
+
+	if(frame_count % 36 == 35)
+	{
+		mat_store[0].copyTo(mat_store[1]);
+		target_store.x = target_point.x;
+		target_store.y = target_point.y;
+	}
+
+        cv::imshow("35 frames before", mat_store[1]);
+
         if(trackFail)
         {
             cv::putText(frame, "Tracking re-initting", cv::Point(300, 100), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
@@ -418,6 +676,10 @@ int Track::kcf()
 		}
         cv::imshow("Second cam detection", frame2);
 	}
+
+	target_point.x = bbox.x; target_point.y = bbox.y;
+
+	frame_count += 1 ;
 
         // Exit if ESC pressed.
         if(cv::waitKey(1) == 27)
