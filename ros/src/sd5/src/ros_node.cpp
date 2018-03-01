@@ -35,7 +35,38 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
 
 // Gets called when a right image frame comes in
 void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
-    //ROS_INFO("Received right image with size: %i x %i", msg->width, msg->height);
+    ROS_INFO("Received right image with size: %i x %i", msg->width, msg->height);
+
+    cv_bridge::CvImagePtr cv_ptr;
+    try {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    } catch (cv_bridge::Exception& e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    cv::Mat right_image = cv_ptr->image;
+    std::vector<cv::Rect> drones;
+
+    drone_track.detect(drones, right_image);
+}
+
+// Gets called when a left image frame comes in
+void image_callback_rear(const sensor_msgs::ImageConstPtr& msg) {
+    ROS_INFO("Received rear image with size: %i x %i", msg->width, msg->height);
+
+    cv_bridge::CvImagePtr cv_ptr;
+    try {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    } catch (cv_bridge::Exception& e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    cv::Mat rear_image = cv_ptr->image;
+    std::vector<cv::Rect> drones;
+
+    drone_track.detect(drones, rear_image);
 }
 
 int main(int argc, char **argv) {
@@ -51,6 +82,8 @@ int main(int argc, char **argv) {
             2, image_callback_left);
     ros::Subscriber right_sub = nh.subscribe("/sd5_1/camera_sd5_right/image_raw",
             2, image_callback_right);
+    ros::Subscriber rear_sub = nh.subscribe("/sd5_1/camera_sd5_rear/image_raw",
+            2, image_callback_rear);
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
             ("/sd5_1/mavros/setpoint_position/local", 10);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
