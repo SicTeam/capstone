@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+    <node name="sd5_node" pkg="sd5" type="sd5_node" />
+</launch>
