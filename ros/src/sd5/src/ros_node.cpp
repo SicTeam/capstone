@@ -77,19 +77,21 @@ int main(int argc, char **argv) {
 
     // Create subscribers and publishers
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
-            ("/sd5_1/mavros/state", 10, state_cb);
+            ("/mavros/state", 10, state_cb);
+    /*
     ros::Subscriber left_sub = nh.subscribe("/sd5_1/camera_sd5_left/image_raw",
             2, image_callback_left);
     ros::Subscriber right_sub = nh.subscribe("/sd5_1/camera_sd5_right/image_raw",
             2, image_callback_right);
     ros::Subscriber rear_sub = nh.subscribe("/sd5_1/camera_sd5_rear/image_raw",
             2, image_callback_rear);
+    */
     ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
-            ("/sd5_1/mavros/setpoint_position/local", 10);
+            ("/mavros/setpoint_position/local", 10);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
-            ("/sd5_1/mavros/cmd/arming");
+            ("/mavros/cmd/arming");
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>
-            ("/sd5_1/mavros/set_mode");
+            ("/mavros/set_mode");
 
     // The setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
@@ -102,7 +104,7 @@ int main(int argc, char **argv) {
 
     // Create a position 2 meters upwards
     geometry_msgs::PoseStamped pose;
-    pose.pose.position.x = 0;
+    pose.pose.position.x = 2;
     pose.pose.position.y = 0;
     pose.pose.position.z = 2;
 
