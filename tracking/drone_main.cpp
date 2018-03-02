@@ -17,7 +17,7 @@ int main(int argc, char ** argv)
     std::cout << "OpenCV Version: " << CV_VERSION << std::endl;
     std::cout << "OpenCV Minor Version: " << CV_MINOR_VERSION << std:: endl;
     //for testing the detection
-    //drone_track.detect_image(argv[1]);
+//    drone_track.detect_image(argv[1]);
 
     //detect/track off video passed in, else use live video feed
 
