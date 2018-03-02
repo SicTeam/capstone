@@ -19,17 +19,22 @@ int main(int argc, char ** argv)
     //for testing the detection
 //    drone_track.detect_image(argv[1]);
 
+    //drone_track.detect_image(argv[1]);
+
     //detect/track off video passed in, else use live video feed
 
-    if(argv[1])
+    drone_track.kcf(argv[1],argv[2]);
+    /*if(argv[1])
     {
         drone_track.kcf(argv[1]);
     }
+    
+
     else
     {
         Track face_track("face.xml");
         face_track.kcf();
-    }
+    }*/
     
     return 0;
 }
