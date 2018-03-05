@@ -25,16 +25,28 @@ class Track
     public:
         Track();
         Track(std::string file_name);
-        int detect_image(std::string image);
+        int detect_image();
+    	int detect_image(std::string image);
         int detect(std::vector<cv::Rect> & drones, cv::Mat frame);
         int kcf(char * vid);
+        int kcf(char * vid1, char * vid2);
         int kcf();
         void display();
 
     private:
+        void createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trackerType);
         cv::Rect target;
+
         cv::Point target_point;
+	cv::Point left_target_point;
+	cv::Point right_target_point;
+
         cv::CascadeClassifier cascade;
         std::string cascade_name;
         int min_neighbors;        
+	bool cam2_detect;
+
+	//to store old frame
+	cv:: Mat mat_store[2];
+	cv:: Point target_store;
 };

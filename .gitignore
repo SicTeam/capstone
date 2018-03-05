@@ -31,7 +31,6 @@
 *.out
 *.app
 
-
 # ROS
 build/
 devel/
@@ -47,4 +46,3 @@ devel/
 /tracking/CMakeCache.txt
 /tracking/Makefile
 /tracking/CMakeFiles/
-
