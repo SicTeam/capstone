@@ -17,6 +17,15 @@ cv::VideoWriter vwLeft("left.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 
 cv::VideoWriter vwRight("right.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
 cv::VideoWriter vwRear("rear.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
 
+bool detectLeft = false;
+cv::Ptr<cv::Tracker> trackLeft;
+std::vector<cv::Rect> dronesLeft;
+
+bool detectRight = false;
+cv::Ptr<cv::Tracker> trackRight;
+std::vector<cv::Rect> dronesRight;
+
+
 // Keep counts to only use every 10th frame
 int left_count = 0;
 int right_count = 0;
@@ -55,11 +64,13 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
         }
 
         // Detect and draw bounding boxes on frame
-        std::vector<cv::Rect> drones;
-        drone_track.detect(drones, left_image);
+        //std::vector<cv::Rect> drones;
+	if(!detectLeft)
+        	detectLeft = drone_track.detect(dronesLeft, left_image);
+	else
+		detectLeft = drone_track.track(left_image, dronesLeft[0], trackLeft);
 
-    drone_track.detect(drones, left_image);
-    vwLeft << left_image;
+    	vwLeft << left_image;
         left_count = 0;
     } 
     else {
@@ -92,11 +103,15 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
         }
 
         // Detect and draw bounding boxes on frame
-        std::vector<cv::Rect> drones;
-        drone_track.detect(drones, right_image);
+        //std::vector<cv::Rect> drones;
+        //drone_track.detect(drones, right_image);
+	if(!detectRight)
+        	detectRight = drone_track.detect(dronesRight, right_image);
+	else
+		detectRight = drone_track.track(right_image, dronesRight[0], trackRight);
 
-    drone_track.detect(drones, right_image);
-    vwRight << right_image;
+
+    	vwRight << right_image;
         right_count = 0;
     } else {
         right_count++;
