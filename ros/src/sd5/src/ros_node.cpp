@@ -12,6 +12,11 @@ mavros_msgs::State current_state;
 // Drone detecting/tracking object
 Track drone_track;
 
+int count = 0;
+cv::VideoWriter vwLeft("left.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
+cv::VideoWriter vwRight("right.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
+cv::VideoWriter vwRear("rear.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
+
 // Keep counts to only use every 10th frame
 int left_count = 0;
 int right_count = 0;
@@ -26,6 +31,8 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg) {
 
 // Gets called when a left image frame comes in
 void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
+
+    //ROS_INFO("Received left image with size: %i x %i", msg->width, msg->height);
     if (left_count == 10) {
         ROS_INFO("Received left image");
 
@@ -51,14 +58,18 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
         std::vector<cv::Rect> drones;
         drone_track.detect(drones, left_image);
 
+    drone_track.detect(drones, left_image);
+    vwLeft << left_image;
         left_count = 0;
-    } else {
+    } 
+    else {
         left_count++;
     }
 }
 
 // Gets called when a right image frame comes in
 void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
+    //ROS_INFO("Received right image with size: %i x %i", msg->width, msg->height);
     if(right_count == 10) {
         ROS_INFO("Received right image");
 
@@ -84,6 +95,8 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
         std::vector<cv::Rect> drones;
         drone_track.detect(drones, right_image);
 
+    drone_track.detect(drones, right_image);
+    vwRight << right_image;
         right_count = 0;
     } else {
         right_count++;
@@ -92,6 +105,7 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
 
 // Gets called when a left image frame comes in
 void image_callback_rear(const sensor_msgs::ImageConstPtr& msg) {
+    //ROS_INFO("Received rear image with size: %i x %i", msg->width, msg->height);
     ROS_INFO("Received rear image");
 
     // Extract cv::Mat from message
@@ -106,6 +120,7 @@ void image_callback_rear(const sensor_msgs::ImageConstPtr& msg) {
 
     std::vector<cv::Rect> drones;
     drone_track.detect(drones, rear_image);
+    vwRear << rear_image;
 }
 
 int main(int argc, char **argv) {
@@ -143,14 +158,15 @@ int main(int argc, char **argv) {
     geometry_msgs::PoseStamped pose;
     pose.pose.position.x = 0;
     pose.pose.position.y = 0;
-    pose.pose.position.z = 2;
+    pose.pose.position.z = 10;
 
     // Send a few setpoints before starting
-    for(int i = 100; ros::ok() && i > 0; --i) {
+    /*for(int i = 100; ros::ok() && i > 0; --i) {
+	//ROS_INFO("\"In-loop\" Publishing position: x: %f, y: %f, z: %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
         local_pos_pub.publish(pose);
         ros::spinOnce();
         rate.sleep();
-    }
+    }*/
 
     // OFFBOARD mavlink command
     mavros_msgs::SetMode offb_set_mode;
@@ -183,8 +199,9 @@ int main(int argc, char **argv) {
 
         // Send positioning command
         local_pos_pub.publish(pose);
-
-        ros::spinOnce();
+	ROS_INFO("\"One-time\" Publishing position: x: %f, y: %f, z: %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
+        
+	ros::spinOnce();
         rate.sleep();
     }
 

@@ -113,7 +113,7 @@ int Track::detect(std::vector<cv::Rect> & drones, cv::Mat frame)
     int size = drones.size();
     std::cout << "Objects Detected: " << size << std::endl;
 
-    //cv::Point center(drones[0].x + drones[0].width/2, drones[0].y + drones[0].height/2);
+    cv::Point center(drones[0].x + drones[0].width/2, drones[0].y + drones[0].height/2);
     
     //set class target point to pass to pursuit
     //target = center;
@@ -123,6 +123,7 @@ int Track::detect(std::vector<cv::Rect> & drones, cv::Mat frame)
     {
         rectangle(frame, drones[i], cv::Scalar(225,0,0),2,8);
     }
+    circle(frame, center, 1, cv::Scalar(0,0,225), 2, 1, 0);
 
     return size;
 }
@@ -703,3 +704,33 @@ void Track::display()
     std::cout << "-----------------------------------" << std::endl << std::endl;
     
 }
+
+
+int Track::track(const cv::Mat & frame)
+{
+    std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
+    std::string trackerType = trackerTypes[4];
+
+    //left tracker init
+    std::vector<cv::Rect> drones;
+    cv::Ptr<cv::Tracker> tracker;
+    cv::Rect2d bbox_left;
+    cv::Rect2d origin_box;
+    bool trackFail = false;
+    bool cond = true; // to signal if the left camera still running
+
+
+    createTracker(tracker, trackerType);
+
+
+
+
+
+
+
+
+
+
+	return 0;
+
+} 
