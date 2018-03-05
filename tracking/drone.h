@@ -33,6 +33,9 @@ class Track
         int kcf();
         void display();
 
+	int track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & tracker);
+
+
     private:
         void createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trackerType);
         cv::Rect target;
