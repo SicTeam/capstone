@@ -42,7 +42,7 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg) {
 void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
 
     //ROS_INFO("Received left image with size: %i x %i", msg->width, msg->height);
-    if (left_count == 10) {
+    if (left_count == 1 || left_count == 0) {
         ROS_INFO("Received left image");
 
         // Extract cv::Mat from message
@@ -66,9 +66,15 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
         // Detect and draw bounding boxes on frame
         //std::vector<cv::Rect> drones;
 	if(!detectLeft)
+	{
         	detectLeft = drone_track.detect(dronesLeft, left_image);
+		ROS_INFO("In detection condition (left)");
+	}
 	else
+	{
 		detectLeft = drone_track.track(left_image, dronesLeft[0], trackLeft);
+		ROS_INFO("In tracking condition (left)");
+	}
 
     	vwLeft << left_image;
         left_count = 0;
@@ -106,10 +112,15 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
         //std::vector<cv::Rect> drones;
         //drone_track.detect(drones, right_image);
 	if(!detectRight)
+	{
         	detectRight = drone_track.detect(dronesRight, right_image);
+		ROS_INFO("In detection condition (right)");
+	}	
 	else
+	{
 		detectRight = drone_track.track(right_image, dronesRight[0], trackRight);
-
+		ROS_INFO("In tracking condition (right)");
+	}
 
     	vwRight << right_image;
         right_count = 0;

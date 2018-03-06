@@ -713,20 +713,20 @@ int Track::track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & track
 	 
     //tracker init
     cv::Rect2d bbox;
-    cv::Rect2d origin_box;
-    bool trackFail = false;
-    bool cond = true; // to signal if the left camera still running
+    //cv::Rect2d origin_box;
+    //bool trackFail = false;
+    //bool cond = true; // to signal if the left camera still running
 
     if(!tracker)
     {
     	createTracker(tracker, trackerType);
-	tracker->init(frame, bbox);
-        rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
+	//tracker->init(frame, bbox);
+	//rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
     }
  
 
     bbox = drone;
-    origin_box.x = bbox.x ; origin_box.y = bbox.y; origin_box.width = bbox.width; origin_box.height = bbox.height; 
+    //origin_box.x = bbox.x ; origin_box.y = bbox.y; origin_box.width = bbox.width; origin_box.height = bbox.height; 
     rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
     tracker->init(frame, bbox);
 
