@@ -64,16 +64,17 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
         }
 
         // Detect and draw bounding boxes on frame
-        //std::vector<cv::Rect> drones;
-	if(!detectLeft)
+	    if(!detectLeft){
+            ROS_INFO("Conducting Left Detection");
         	detectLeft = drone_track.detect(dronesLeft, left_image);
-	else
-		detectLeft = drone_track.track(left_image, dronesLeft[0], trackLeft);
-
+        }
+	    else{
+            ROS_INFO("Conducting Left Tracking");
+		    detectLeft = drone_track.track(left_image, dronesLeft[0], trackLeft);
+        }
     	vwLeft << left_image;
         left_count = 0;
-    } 
-    else {
+    } else {
         left_count++;
     }
 }
@@ -103,12 +104,14 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
         }
 
         // Detect and draw bounding boxes on frame
-        //std::vector<cv::Rect> drones;
-        //drone_track.detect(drones, right_image);
-	if(!detectRight)
+	    if(!detectRight){
+            ROS_INFO("Conducting Right Detection");
         	detectRight = drone_track.detect(dronesRight, right_image);
-	else
-		detectRight = drone_track.track(right_image, dronesRight[0], trackRight);
+        }
+	    else{
+            ROS_INFO("Conducting Right Tracking");
+		    detectRight = drone_track.track(right_image, dronesRight[0], trackRight);
+        }
 
 
     	vwRight << right_image;
