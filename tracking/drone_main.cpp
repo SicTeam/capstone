@@ -18,21 +18,16 @@ int main(int argc, char ** argv)
     std::cout << "OpenCV Minor Version: " << CV_MINOR_VERSION << std:: endl;
 
     //uncomment for testing the detection
-
     //drone_track.detect_image(argv[1]);
 
     //uncomment for testing the tracking
 
     drone_track.track_tester(argv[1]);
 
-    //detect/track off video passed in, else use live video feed
-
     /*if(argv[1])
     {
         drone_track.kcf(argv[1]);
     }
-    
-
     else
     {
         Track face_track("face.xml");
