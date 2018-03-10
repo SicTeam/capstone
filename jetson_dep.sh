@@ -212,5 +212,13 @@ echo "source /opt/ros/kinetic/setup.bash" >> $HOME/.bashrc
 source /opt/ros/kinetic/setup.bash
 
 
-#echo "3. No other stuff yet"
+echo "3. Setup catkin workspace"
+
+cd ./ros
+catkin_init_workspace src
+catkin_make
+
+source devel/setup.bash
+
+
 

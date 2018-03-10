@@ -722,3 +722,64 @@ int Track::track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & track
     
     return 0;
 } 
+
+int Track::track_tester(char * vid)
+{
+    std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
+    std::string trackerType = trackerTypes[4];
+    std::vector<cv::Rect> drones;
+    cv::Ptr<cv::Tracker> tracker;
+    cv::Mat frame; //holds video frame
+    cv::Rect2d bbox;
+    
+    createTracker(tracker, trackerType);
+
+
+    #if (vid == NULL)
+    	cv::VideoCapture video(0);
+    #else
+    	cv::VideoCapture video(vid);
+    #endif
+
+    //Exit if video is not opened
+    if(!video.isOpened())
+    {
+        std::cout << "Could not read video file" << std::endl;
+        return 1;
+    }
+    
+    //take first frame
+    video >> frame;
+
+    bbox = selectROI(frame,false);
+
+    rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
+    tracker->init(frame, bbox);
+
+    while(video.read(frame)) 
+    {
+        //Update tracking result
+        bool ok = tracker->update(frame, bbox);
+
+        if(ok)
+        {
+            //Tracking success: draw tracked object
+            rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
+        }
+
+        else
+        {
+            cv::putText(frame, "Tracking Failure Detected", cv::Point(100, 80), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
+        }
+
+        // Display frame.
+        cv::imshow("Tracking", frame);
+
+        // Exit if ESC pressed.
+        if(cv::waitKey(1) == 27)
+        {
+            break;
+        }
+    }
+    return 0;
+}
