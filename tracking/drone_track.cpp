@@ -10,7 +10,7 @@
 //Output:
 Track::Track()
 {
-    cascade_name = "/home/herberholz/Desktop/sim_model/data/cascade.xml";
+    cascade_name = "sim_cascade.xml";
     min_neighbors = 15; //the higher this number the more strict detection is
     //cascade_name = "cascade.xml";
     if(!cascade.load(cascade_name))
@@ -93,10 +93,11 @@ int Track::detect(std::vector<cv::Rect> & drones, cv::Mat frame)
     //target = center;
 
     //XXX determine which element of drones is actually the drone
-    for(size_t i = 0; i < size; ++i)
-    {
-        rectangle(frame, drones[i], cv::Scalar(225,0,0),2,8);
-    }
+//    for(size_t i = 0; i < size; ++i)
+//    {
+//        rectangle(frame, drones[i], cv::Scalar(225,0,0),2,8);
+//    }
+    rectangle(frame, drones[0], cv::Scalar(225,0,0),2,8);
     circle(frame, center, 1, cv::Scalar(0,0,225), 2, 1, 0);
 
     return 1;
