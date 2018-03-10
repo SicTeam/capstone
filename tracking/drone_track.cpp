@@ -10,8 +10,8 @@
 //Output:
 Track::Track()
 {
-    cascade_name = "training/data/cascade.xml";
-    min_neighbors = 5; //the higher this number the more strict detection is
+    cascade_name = "/home/herberholz/Desktop/sim_model/data/cascade.xml";
+    min_neighbors = 15; //the higher this number the more strict detection is
     //cascade_name = "cascade.xml";
     if(!cascade.load(cascade_name))
     {
@@ -38,31 +38,6 @@ Track::Track(std::string file_name)
 }
 
 
-//Task: Detects drone from test images
-//Input:
-//Output:
-int Track::detect_image(std::string image)
-{
-    //String image("test/test_image/1.jpeg");
-    //cv::VideoCapture video("test/Video_1.avi");
-    std::vector<cv::Rect> drones;
-    cv::Mat frame;
-
-    //video >> frame;
-    frame = cv::imread( image, cv::IMREAD_COLOR);
-
-    if(!detect(drones, frame))
-    {
-        std::cout << "No object Detected" << std::endl;
-        return 0;
-    }
-
-    cv::namedWindow("Drone Detect", cv::WINDOW_AUTOSIZE);
-    cv::imshow("Drone Detect", frame);
-    cv::waitKey(0);
-
-    return 0;
-}
 
 //Task: Detects drone from test images
 //Input:
@@ -100,7 +75,7 @@ int Track::detect(std::vector<cv::Rect> & drones, cv::Mat frame)
     cv::equalizeHist(frame_gray, frame_gray);
 
     //detect drone
-    cascade.detectMultiScale(frame_gray, drones, 1.05, min_neighbors, 0|cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
+    cascade.detectMultiScale(frame_gray, drones, 1.1, min_neighbors, 0|cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30));
 
     //return 0 when no objects detected
     if(drones.size() == 0)
