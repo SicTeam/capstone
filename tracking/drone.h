@@ -32,19 +32,21 @@ class Track
         int kcf(char * vid1, char * vid2);
         int kcf();
         void display();
+	    int track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & tracker);
+
 
     private:
         void createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trackerType);
         cv::Rect target;
 
         cv::Point target_point;
-	cv::Point left_target_point;
-	cv::Point right_target_point;
+	    cv::Point left_target_point;
+	    cv::Point right_target_point;
 
         cv::CascadeClassifier cascade;
         std::string cascade_name;
         int min_neighbors;        
-	bool cam2_detect;
+	    bool cam2_detect;
 
 	//to store old frame
 	cv:: Mat mat_store[2];
