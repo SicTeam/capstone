@@ -19,6 +19,10 @@ mavros_msgs::State current_state;
 // Drone detecting/tracking object
 Track * drone_track;
 
+bool detectLeft = false;
+cv::Ptr<cv::Tracker> trackLeft;
+std::vector<cv::Rect> dronesLeft;
+
 // Get current mavros state
 void state_cb(const mavros_msgs::State::ConstPtr& msg) {
     current_state = *msg;
@@ -46,12 +50,19 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
             std::cout << "Popping left front" << std::endl;
         }
 
-        left_images.push_back(left_image);
-
         // Detect and draw bounding boxes on frame
-        std::vector<cv::Rect> drones;
-        drone_track->detect(drones, left_image);
-
+	    if(!detectLeft){
+            ROS_INFO("Conducting Left Detection");
+        	detectLeft = drone_track->detect(dronesLeft, left_image);
+        }
+	    else{
+            ROS_INFO("Conducting Left Tracking");
+        	drone_track->detect(dronesLeft, left_image);
+		    detectLeft = drone_track->track(left_image, dronesLeft[0], trackLeft);
+        }
+        left_images.push_back(left_image);
+        
+        
         left_count = 0;
     } else {
         left_count++;
@@ -80,11 +91,11 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
             std::cout << "Popping right front" << std::endl;
         }
 
-        right_images.push_back(right_image);
-
         // Detect and draw bounding boxes on frame
         std::vector<cv::Rect> drones;
         drone_track->detect(drones, right_image);
+        
+        right_images.push_back(right_image);
 
         right_count = 0;
     } else {
@@ -94,6 +105,7 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
 
 // Gets called when a left image frame comes in
 void image_callback_rear(const sensor_msgs::ImageConstPtr& msg) {
+    //ROS_INFO("Received rear image with size: %i x %i", msg->width, msg->height);
     ROS_INFO("Received rear image");
 
     // Extract cv::Mat from message
@@ -151,14 +163,15 @@ int main(int argc, char **argv) {
     geometry_msgs::PoseStamped pose;
     pose.pose.position.x = 0;
     pose.pose.position.y = 0;
-    pose.pose.position.z = 2;
+    pose.pose.position.z = 10;
 
     // Send a few setpoints before starting
-    for(int i = 100; ros::ok() && i > 0; --i) {
+    /*for(int i = 100; ros::ok() && i > 0; --i) {
+	//ROS_INFO("\"In-loop\" Publishing position: x: %f, y: %f, z: %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
         local_pos_pub.publish(pose);
         ros::spinOnce();
         rate.sleep();
-    }
+    }*/
 
     // OFFBOARD mavlink command
     mavros_msgs::SetMode offb_set_mode;
@@ -191,8 +204,9 @@ int main(int argc, char **argv) {
 
         // Send positioning command
         local_pos_pub.publish(pose);
-
-        ros::spinOnce();
+	ROS_INFO("\"One-time\" Publishing position: x: %f, y: %f, z: %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
+        
+	ros::spinOnce();
         rate.sleep();
     }
 

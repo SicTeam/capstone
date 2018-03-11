@@ -31,6 +31,13 @@
 *.out
 *.app
 
+
+# Video artifacts
+*.avi
+
+# Swap Files
+*.swp
+
 # ROS
 build/
 devel/
