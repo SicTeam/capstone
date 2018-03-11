@@ -18,6 +18,8 @@ Track::Track()
         std::cout << "FAIL" << std::endl;
     }
     //cam2_detect = false; 
+    image_center.x = 400;
+    image_center.y = 400;
 }
 
 
@@ -35,6 +37,8 @@ Track::Track(std::string file_name)
     }
 
     cam2_detect = false; 
+    image_center.x = 400;
+    image_center.y = 400;
 }
 
 
@@ -681,7 +685,34 @@ void Track::display()
     std::cout << "-----------------------------------" << std::endl << std::endl;
     
 }
+//Task: provides a depth to target drone 
+//Input: center points from the detected drone, from both L & R images
+//Output: integer value Z for estimated depth
 
+int Track::depth(cv::Point left, cv::Point right)
+{
+   return abs(left.x - right.x);
+}
+
+//Task: tranform image detection center into projected (x,y) value for drone movement
+//Input: the (x,y) values provided by the left image detection/tracking of proper target
+//Output: projected CV::Point object
+
+cv::Point Track::projectedXY(cv::Point drone_center)
+{
+   //XXX for drone control inputs:
+   //    proj.x is Left(+) Right(-), proj.y is Up(+) Down(-)
+   cv::Point proj;
+   //use image_center with drone_center t0 product the correctly projected values
+   //currently these will produce TRUE values related to the 
+   //image & may need to be scaled down by a factor
+   proj.x = image_center.x - drone_center.x;
+   proj.y = image_center.y - drone_center.y;
+   return proj;
+}
+//Task:
+//Input:
+//Output:
 
 int Track::track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & tracker)
 {
@@ -722,6 +753,9 @@ int Track::track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & track
     
     return 0;
 } 
+//Task:
+//Input:
+//Output:
 
 int Track::track_tester(char * vid)
 {

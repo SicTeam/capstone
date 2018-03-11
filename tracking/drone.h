@@ -3,6 +3,7 @@
 
 
 #include <iostream>
+#include <cmath>
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
 #include <opencv2/core/ocl.hpp>
@@ -35,10 +36,12 @@ class Track
 	int track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & tracker);
 	int track_tester(char * vid);
 
+   int depth(cv::Point left, cv::Point right);
+   void projectedXY(cv::Point center);
     private:
         void createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trackerType);
         cv::Rect target;
-
+        cv::Point image_center;
         cv::Point target_point;
 	    cv::Point left_target_point;
 	    cv::Point right_target_point;
