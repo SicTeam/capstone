@@ -204,7 +204,6 @@ int main(int argc, char **argv) {
 
         // Send positioning command
         local_pos_pub.publish(pose);
-	ROS_INFO("\"One-time\" Publishing position: x: %f, y: %f, z: %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
         
 	ros::spinOnce();
         rate.sleep();
