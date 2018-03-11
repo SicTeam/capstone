@@ -1,3 +1,7 @@
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <mavros_msgs/CommandBool.h>
@@ -13,7 +17,7 @@ std::deque<cv::Mat> right_images;
 mavros_msgs::State current_state;
 
 // Drone detecting/tracking object
-Track drone_track("$HOME/cascade.xml");
+Track * drone_track;
 
 // Get current mavros state
 void state_cb(const mavros_msgs::State::ConstPtr& msg) {
@@ -46,7 +50,7 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
 
         // Detect and draw bounding boxes on frame
         std::vector<cv::Rect> drones;
-        drone_track.detect(drones, left_image);
+        drone_track->detect(drones, left_image);
 
         left_count = 0;
     } else {
@@ -80,7 +84,7 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
 
         // Detect and draw bounding boxes on frame
         std::vector<cv::Rect> drones;
-        drone_track.detect(drones, right_image);
+        drone_track->detect(drones, right_image);
 
         right_count = 0;
     } else {
@@ -103,7 +107,7 @@ void image_callback_rear(const sensor_msgs::ImageConstPtr& msg) {
     cv::Mat rear_image = cv_ptr->image;
 
     std::vector<cv::Rect> drones;
-    drone_track.detect(drones, rear_image);
+    drone_track->detect(drones, rear_image);
 }
 
 int main(int argc, char **argv) {
@@ -111,6 +115,12 @@ int main(int argc, char **argv) {
     // ROS required initialization
     ros::init(argc, argv, "main");
     ros::NodeHandle nh;
+
+    // Get $HOME
+    std::string home(getenv("HOME"));
+    std::string cascade_loc = home + "/sim_cascade.xml";
+
+    drone_track = new Track(cascade_loc);
 
     // Create subscribers and publishers
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
@@ -185,6 +195,8 @@ int main(int argc, char **argv) {
         ros::spinOnce();
         rate.sleep();
     }
+
+    delete drone_track;
 
     return 0;
 }
