@@ -11,6 +11,9 @@
 #include <cv_bridge/cv_bridge.h>
 #include "../../../../tracking/drone.h"
 
+// To write out to video files
+const bool EXPORT_VID = false;
+
 std::deque<cv::Mat> left_images;
 std::deque<cv::Mat> right_images;
 
@@ -23,6 +26,9 @@ bool detectLeft = false;
 cv::Ptr<cv::Tracker> trackLeft;
 std::vector<cv::Rect> dronesLeft;
 
+cv::VideoWriter vwLeft("left.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
+cv::VideoWriter vwRight("right.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
+
 // Get current mavros state
 void state_cb(const mavros_msgs::State::ConstPtr& msg) {
     current_state = *msg;
@@ -32,7 +38,7 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg) {
 void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
     static int left_count = 0;
 
-    if (left_count == 5) {
+    if (left_count == 2) {
         ROS_INFO("Received left image");
 
         // Extract cv::Mat from message
@@ -51,18 +57,21 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
         }
 
         // Detect and draw bounding boxes on frame
-	    if(!detectLeft){
-            ROS_INFO("Conducting Left Detection");
+	    //if(!detectLeft){
+        //    ROS_INFO("Conducting Left Detection");
         	detectLeft = drone_track->detect(dronesLeft, left_image);
-        }
-	    else{
-            ROS_INFO("Conducting Left Tracking");
-        	drone_track->detect(dronesLeft, left_image);
-		    detectLeft = drone_track->track(left_image, dronesLeft[0], trackLeft);
-        }
+        //}
+	    //else{
+        //    ROS_INFO("Conducting Left Tracking");
+        //	drone_track->detect(dronesLeft, left_image);
+		//    detectLeft = drone_track->track(left_image, dronesLeft[0], trackLeft);
+        //}
         left_images.push_back(left_image);
-        
-        
+
+        if (EXPORT_VID) {
+            vwLeft << left_image;
+        }
+
         left_count = 0;
     } else {
         left_count++;
@@ -73,7 +82,7 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
 void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
     static int right_count = 0;
 
-    if(right_count == 5) {
+    if(right_count == 2) {
         ROS_INFO("Received right image");
 
         // Extract cv::Mat from message
@@ -96,6 +105,10 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
         drone_track->detect(drones, right_image);
         
         right_images.push_back(right_image);
+
+        if (EXPORT_VID) {
+            vwRight << right_image;
+        }
 
         right_count = 0;
     } else {
