@@ -7,17 +7,13 @@
 #include <cv_bridge/cv_bridge.h>
 #include "../../../../tracking/drone.h"
 
+std::deque<cv::Mat> left_images;
+std::deque<cv::Mat> right_images;
+
 mavros_msgs::State current_state;
 
 // Drone detecting/tracking object
-Track drone_track;
-
-// Keep counts to only use every 10th frame
-int left_count = 0;
-int right_count = 0;
-
-// Keep track of last seen frame (to sync corresponding left and right frames)
-cv::Mat * last_image = 0;
+Track drone_track("$HOME/cascade.xml");
 
 // Get current mavros state
 void state_cb(const mavros_msgs::State::ConstPtr& msg) {
@@ -26,7 +22,9 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg) {
 
 // Gets called when a left image frame comes in
 void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
-    if (left_count == 10) {
+    static int left_count = 0;
+
+    if (left_count == 5) {
         ROS_INFO("Received left image");
 
         // Extract cv::Mat from message
@@ -39,13 +37,12 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
         }
         cv::Mat left_image = cv_ptr->image;
 
-        // Check if it corresponds with saved last image
-        if (last_image) {
-            std::cout << "This image corresponds with the last saved image" << std::endl;
-            last_image = 0;
-        } else {
-            last_image = &left_image;
+        if (left_images.size() == 20) {
+            left_images.pop_front();
+            std::cout << "Popping left front" << std::endl;
         }
+
+        left_images.push_back(left_image);
 
         // Detect and draw bounding boxes on frame
         std::vector<cv::Rect> drones;
@@ -59,7 +56,9 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
 
 // Gets called when a right image frame comes in
 void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
-    if(right_count == 10) {
+    static int right_count = 0;
+
+    if(right_count == 5) {
         ROS_INFO("Received right image");
 
         // Extract cv::Mat from message
@@ -72,13 +71,12 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
         }
         cv::Mat right_image = cv_ptr->image;
 
-        // Check if it corresponds with saved last image
-        if (last_image) {
-            std::cout << "This image corresponds with the last saved image" << std::endl;
-            last_image = 0;
-        } else {
-            last_image = &right_image;
+        if (right_images.size() == 20) {
+            right_images.pop_front();
+            std::cout << "Popping right front" << std::endl;
         }
+
+        right_images.push_back(right_image);
 
         // Detect and draw bounding boxes on frame
         std::vector<cv::Rect> drones;
