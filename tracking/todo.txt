@@ -1,9 +1,5 @@
 To do List
 
-1) Need to implement tracking by try running it on live feed
-2) Allow passing of video through testing functions
-3) Need to come up with automated testing suit
+1) Need to come up with automated testing suit
     a)Look into Cmake's Ctest
-4) Figure out how to train and store detection algorithm
-5) Figure out the tracking and detection control flow
-6) How to compile test from outside directory using cmake/make
+2) How to compile test from outside directory using cmake/make
