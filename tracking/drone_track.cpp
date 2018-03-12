@@ -44,11 +44,9 @@ Track::Track(std::string file_name)
 //Output:
 int Track::detect_image(std::string image)
 {
-    //cv::VideoCapture video("test/Video_1.avi");
     std::vector<cv::Rect> drones;
     cv::Mat frame;
 
-    //video >> frame;
     frame = cv::imread( image, cv::IMREAD_COLOR);
 
     if(!detect(drones, frame))
