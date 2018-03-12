@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
 
     // Get $HOME
     std::string home(getenv("HOME"));
-    std::string cascade_loc = home + "/sim_cascade.xml";
+    std::string cascade_loc = home + "/cascade.xml";
 
     drone_track = new Track(cascade_loc);
 
