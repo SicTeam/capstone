@@ -1,3 +1,4 @@
+//this file will contain function call for testing purpose - objective : detect a drone from image
 #include "drone.h"
 
 int main(int argc, char ** argv)
