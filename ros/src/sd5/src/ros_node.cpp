@@ -1,3 +1,7 @@
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <mavros_msgs/CommandBool.h>
@@ -7,31 +11,23 @@
 #include <cv_bridge/cv_bridge.h>
 #include "../../../../tracking/drone.h"
 
+// To write out to video files
+const bool EXPORT_VID = false;
+
+std::deque<cv::Mat> left_images;
+std::deque<cv::Mat> right_images;
+
 mavros_msgs::State current_state;
 
 // Drone detecting/tracking object
-Track drone_track;
-
-int count = 0;
-cv::VideoWriter vwLeft("left.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
-cv::VideoWriter vwRight("right.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
-cv::VideoWriter vwRear("rear.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
+Track * drone_track;
 
 bool detectLeft = false;
 cv::Ptr<cv::Tracker> trackLeft;
 std::vector<cv::Rect> dronesLeft;
 
-bool detectRight = false;
-cv::Ptr<cv::Tracker> trackRight;
-std::vector<cv::Rect> dronesRight;
-
-
-// Keep counts to only use every 10th frame
-int left_count = 0;
-int right_count = 0;
-
-// Keep track of last seen frame (to sync corresponding left and right frames)
-cv::Mat * last_image = 0;
+cv::VideoWriter vwLeft("left.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
+cv::VideoWriter vwRight("right.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
 
 // Get current mavros state
 void state_cb(const mavros_msgs::State::ConstPtr& msg) {
@@ -40,9 +36,9 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg) {
 
 // Gets called when a left image frame comes in
 void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
+    static int left_count = 0;
 
-    //ROS_INFO("Received left image with size: %i x %i", msg->width, msg->height);
-    if (left_count == 10) {
+    if (left_count == 2) {
         ROS_INFO("Received left image");
 
         // Extract cv::Mat from message
@@ -55,24 +51,27 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
         }
         cv::Mat left_image = cv_ptr->image;
 
-        // Check if it corresponds with saved last image
-        if (last_image) {
-            std::cout << "This image corresponds with the last saved image" << std::endl;
-            last_image = 0;
-        } else {
-            last_image = &left_image;
+        if (left_images.size() == 20) {
+            left_images.pop_front();
+            std::cout << "Popping left front" << std::endl;
         }
 
         // Detect and draw bounding boxes on frame
-	    if(!detectLeft){
-            ROS_INFO("Conducting Left Detection");
-        	detectLeft = drone_track.detect(dronesLeft, left_image);
+	    //if(!detectLeft){
+        //    ROS_INFO("Conducting Left Detection");
+        	detectLeft = drone_track->detect(dronesLeft, left_image);
+        //}
+	    //else{
+        //    ROS_INFO("Conducting Left Tracking");
+        //	drone_track->detect(dronesLeft, left_image);
+		//    detectLeft = drone_track->track(left_image, dronesLeft[0], trackLeft);
+        //}
+        left_images.push_back(left_image);
+
+        if (EXPORT_VID) {
+            vwLeft << left_image;
         }
-	    else{
-            ROS_INFO("Conducting Left Tracking");
-		    detectLeft = drone_track.track(left_image, dronesLeft[0], trackLeft);
-        }
-    	vwLeft << left_image;
+
         left_count = 0;
     } else {
         left_count++;
@@ -81,8 +80,9 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
 
 // Gets called when a right image frame comes in
 void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
-    //ROS_INFO("Received right image with size: %i x %i", msg->width, msg->height);
-    if(right_count == 10) {
+    static int right_count = 0;
+
+    if(right_count == 2) {
         ROS_INFO("Received right image");
 
         // Extract cv::Mat from message
@@ -95,26 +95,21 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
         }
         cv::Mat right_image = cv_ptr->image;
 
-        // Check if it corresponds with saved last image
-        if (last_image) {
-            std::cout << "This image corresponds with the last saved image" << std::endl;
-            last_image = 0;
-        } else {
-            last_image = &right_image;
+        if (right_images.size() == 20) {
+            right_images.pop_front();
+            std::cout << "Popping right front" << std::endl;
         }
 
         // Detect and draw bounding boxes on frame
-	    if(!detectRight){
-            ROS_INFO("Conducting Right Detection");
-        	detectRight = drone_track.detect(dronesRight, right_image);
-        }
-	    else{
-            ROS_INFO("Conducting Right Tracking");
-		    detectRight = drone_track.track(right_image, dronesRight[0], trackRight);
+        std::vector<cv::Rect> drones;
+        drone_track->detect(drones, right_image);
+        
+        right_images.push_back(right_image);
+
+        if (EXPORT_VID) {
+            vwRight << right_image;
         }
 
-
-    	vwRight << right_image;
         right_count = 0;
     } else {
         right_count++;
@@ -137,8 +132,7 @@ void image_callback_rear(const sensor_msgs::ImageConstPtr& msg) {
     cv::Mat rear_image = cv_ptr->image;
 
     std::vector<cv::Rect> drones;
-    drone_track.detect(drones, rear_image);
-    vwRear << rear_image;
+    drone_track->detect(drones, rear_image);
 }
 
 int main(int argc, char **argv) {
@@ -146,6 +140,12 @@ int main(int argc, char **argv) {
     // ROS required initialization
     ros::init(argc, argv, "main");
     ros::NodeHandle nh;
+
+    // Get $HOME
+    std::string home(getenv("HOME"));
+    std::string cascade_loc = home + "/cascade.xml";
+
+    drone_track = new Track(cascade_loc);
 
     // Create subscribers and publishers
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
@@ -217,11 +217,12 @@ int main(int argc, char **argv) {
 
         // Send positioning command
         local_pos_pub.publish(pose);
-	ROS_INFO("\"One-time\" Publishing position: x: %f, y: %f, z: %f", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
         
 	ros::spinOnce();
         rate.sleep();
     }
+
+    delete drone_track;
 
     return 0;
 }
