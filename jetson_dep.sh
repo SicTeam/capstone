@@ -192,11 +192,11 @@ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C
 sudo apt-get update
 
 # Install ROS base and MAVROS
-sudo apt-get install -y ros-kinetic-ros-base ros-kinetic-mavros ros-kinetic-mavros-extras
+sudo apt-get install -y ros-kinetic-ros-desktop-full ros-kinetic-mavros ros-kinetic-mavros-extras
 
 sudo apt-get install -y ros-kinetic-vision-opencv
 #ros-kinetic-PACKAGE \
-
+sudo apt-get remove -y ros-kinetic-gazebo*
 # For some reason, SSL certificates get messed up on TX1 so Python scripts like rosdep will fail. Rehash the certs.
 sudo c_rehash /etc/ssl/certs
 
@@ -215,7 +215,7 @@ source /opt/ros/kinetic/setup.bash
 echo "3. Setup catkin workspace"
 
 cd ./ros
-catkin_init_workspace src
+catkin_init_workspace
 catkin_make
 
 source devel/setup.bash
