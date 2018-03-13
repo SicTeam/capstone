@@ -1,3 +1,29 @@
+/*
+
+The MIT License
+
+Copyright (c) 2018 SicTeam - (Portland State University)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+*/
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -11,23 +37,53 @@
 #include <cv_bridge/cv_bridge.h>
 #include "../../../../tracking/drone.h"
 
-// To write out to video files
+// Write video out to files
 const bool EXPORT_VID = false;
 
-std::deque<cv::Mat> left_images;
-std::deque<cv::Mat> right_images;
+struct frame_data {
+    cv::Mat frame;
+    std::vector<cv::Rect> rects;
+} typedef frame_data;
+
+// Store camera frames and bounding boxes
+std::deque<frame_data> left_images;
+std::deque<frame_data> right_images;
 
 mavros_msgs::State current_state;
 
 // Drone detecting/tracking object
 Track * drone_track;
 
-bool detectLeft = false;
-cv::Ptr<cv::Tracker> trackLeft;
-std::vector<cv::Rect> dronesLeft;
+// Drone detected in last frame flag
+bool detect_left = false;
+// Tracking object for tracking function
+cv::Ptr<cv::Tracker> track_left;
 
-cv::VideoWriter vwLeft("left.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
-cv::VideoWriter vwRight("right.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 15.0, cv::Size(800, 800), true);
+
+cv::VideoWriter vwLeft("left.avi",
+        cv::VideoWriter::fourcc('D', 'I', 'V', 'X'),
+        15.0,
+        cv::Size(800, 800),
+        true);
+cv::VideoWriter vwRight("right.avi",
+        cv::VideoWriter::fourcc('D', 'I', 'V', 'X'),
+        15.0,
+        cv::Size(800, 800),
+        true);
+
+void pursue() {
+
+}
+
+// DEBUGGING
+void print_list() {
+    std::cout << "LEFT LIST" << std::endl;
+    for (int i = 0; i < left_images.size(); i++) {
+        std::cout << "mat " << i << ": " << left_images[i].frame.size << std::endl;
+        std::cout << "rects size: " << left_images[i].rects.size() << std::endl;
+    }
+    std::cout << "END LEFT LIST" << std::endl;
+}
 
 // Get current mavros state
 void state_cb(const mavros_msgs::State::ConstPtr& msg) {
@@ -53,20 +109,27 @@ void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
 
         if (left_images.size() == 20) {
             left_images.pop_front();
-            std::cout << "Popping left front" << std::endl;
         }
+
+        std::vector<cv::Rect> rects;
 
         // Detect and draw bounding boxes on frame
 	    //if(!detectLeft){
         //    ROS_INFO("Conducting Left Detection");
-        	detectLeft = drone_track->detect(dronesLeft, left_image);
+        detect_left = drone_track->detect(rects, left_image);
         //}
 	    //else{
         //    ROS_INFO("Conducting Left Tracking");
         //	drone_track->detect(dronesLeft, left_image);
-		//    detectLeft = drone_track->track(left_image, dronesLeft[0], trackLeft);
+		//    detectLeft = drone_track->track(left_image, drones_left[0], track_left);
         //}
-        left_images.push_back(left_image);
+
+        frame_data data;
+        data.frame = left_image;
+        data.rects = rects;
+        left_images.push_back(data);
+
+        print_list();
 
         if (EXPORT_VID) {
             vwLeft << left_image;
@@ -97,14 +160,16 @@ void image_callback_right(const sensor_msgs::ImageConstPtr& msg) {
 
         if (right_images.size() == 20) {
             right_images.pop_front();
-            std::cout << "Popping right front" << std::endl;
         }
 
         // Detect and draw bounding boxes on frame
-        std::vector<cv::Rect> drones;
-        drone_track->detect(drones, right_image);
+        std::vector<cv::Rect> rects;
+        drone_track->detect(rects, right_image);
         
-        right_images.push_back(right_image);
+        frame_data data;
+        data.frame = right_image;
+        data.rects = rects;
+        right_images.push_back(data);
 
         if (EXPORT_VID) {
             vwRight << right_image;
