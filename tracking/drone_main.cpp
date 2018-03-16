@@ -21,10 +21,9 @@ int main(int argc, char ** argv)
     //drone_track.detect_image(argv[1]);
 
     //uncomment for testing the tracking
+    //drone_track.track_tester(argv[1]);
 
-    drone_track.track_tester(argv[1]);
-
-    /*if(argv[1])
+    if(argv[1])
     {
         drone_track.kcf(argv[1]);
     }
@@ -32,7 +31,7 @@ int main(int argc, char ** argv)
     {
         Track face_track("face.xml");
         face_track.kcf();
-    }*/
+    }
     
     return 0;
 }
