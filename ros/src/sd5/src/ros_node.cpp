@@ -24,6 +24,9 @@ THE SOFTWARE.
 
 */
 
+#include <ctime>
+#include <cstdlib>
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -57,7 +60,7 @@ geometry_msgs::PoseStamped current_pos;
 geometry_msgs::PoseStamped goto_pos;
 
 // Last pursue message sent
-ros::Time last_pursue;
+//ros::Time last_pursue;
 
 // If takeoff executed
 bool airborne = false;
@@ -104,20 +107,6 @@ void pose_callback(const geometry_msgs::PoseStamped::ConstPtr& msg) {
     current_pos = *msg;
 }
 
-geometry_msgs::Point compute_next_pos(float x, float y, float z) {
-    geometry_msgs::Point new_pos;
-    ROS_INFO("Computing next point");
-
-    x += current_pos.pose.position.x;
-    y += current_pos.pose.position.y;
-    z += current_pos.pose.position.z;
-
-    new_pos.x;
-    new_pos.y;
-    new_pos.z;
-
-    return new_pos;
-}
 
 // Gets called when a left image frame comes in
 void image_callback_left(const sensor_msgs::ImageConstPtr& msg) {
@@ -226,27 +215,50 @@ void image_callback_rear(const sensor_msgs::ImageConstPtr& msg) {
     drone_track->detect(rects, rear_image);
 }
 
-bool should_pursue() {
+bool should_pursue(ros::Time& last_pursue_time) {
     int size = left_images.size();
 
+    // We need at least 5 data points
     if (size < 5) {
         return false;
     }
 
-    if (ros::Time::now() - last_pursue < ros::Duration(5.0)) {
+    // airborne is set when armed and 10 seconds has passed
+    if (!airborne) {
         return false;
     }
 
+    // Don't send command if we already have in the last 5 seconds
+    if (ros::Time::now() - last_pursue_time < ros::Duration(5.0)) {
+        return false;
+    }
+
+    // Last 5 camera frames need to have detected something
     for (int i = size; i > size - 5; i--) {
         if (left_images[i].rects.size() == 0) {
-            print_list();
             return false;
         }
     }
 
-
-    ROS_INFO("Should pursue");
     return true;
+}
+
+geometry_msgs::Point compute_next_pos(float x, float y, float z) {
+    geometry_msgs::Point new_pos;
+
+    if (std::rand() % 2 == 0) {
+        y = -y;
+    }
+
+    // Append current position to new coordinates
+    x += current_pos.pose.position.x;
+    y += current_pos.pose.position.y;
+
+    new_pos.x = x;
+    new_pos.y = y;
+    new_pos.z = z;
+
+    return new_pos;
 }
 
 int main(int argc, char **argv) {
@@ -254,6 +266,9 @@ int main(int argc, char **argv) {
     // ROS required initialization
     ros::init(argc, argv, "main");
     ros::NodeHandle nh;
+
+    // Init rand
+    std::srand(std::time(NULL));
 
     // Get $HOME
     std::string home(getenv("HOME"));
@@ -293,16 +308,15 @@ int main(int argc, char **argv) {
     current_pos.pose.position.y = 0;
     current_pos.pose.position.z = 0;
 
-
-    // Create a takeoff position (2 meters up)
+    // Create a an initial (takeoff) position 5 meters up
     geometry_msgs::PoseStamped takeoff_pos;
     takeoff_pos.pose.position.x = 0;
     takeoff_pos.pose.position.y = 0;
-    takeoff_pos.pose.position.z = 2;
+    takeoff_pos.pose.position.z = 5;
 
     goto_pos.pose.position.x = 0;
     goto_pos.pose.position.y = 0;
-    goto_pos.pose.position.z = 2;
+    goto_pos.pose.position.z = 5;
 
     // Send a few setpoints before starting
     for(int i = 10; ros::ok() && i > 0; --i) {
@@ -319,47 +333,56 @@ int main(int argc, char **argv) {
     mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
 
-    ros::Time last_request = ros::Time::now();
-    last_pursue = ros::Time::now();
+    // Keep track of requests to prevent command overload
+    ros::Time last_request_time = ros::Time::now();
+    // Keep track of pursue commands to prevent command overload
+    ros::Time last_pursue_time = ros::Time::now();
+    // Keep track of arm time to signal when airborne
+    ros::Time arm_time;
 
     while(ros::ok()) {
         // Send OFFBOARD command every 5s until success
         if (current_state.mode != "OFFBOARD" &&
-            (ros::Time::now() - last_request > ros::Duration(5.0))) {
+            (ros::Time::now() - last_request_time > ros::Duration(5.0))) {
             if (set_mode_client.call(offb_set_mode) && offb_set_mode.response.mode_sent) {
                 ROS_INFO("Offboard enabled");
             }
-            last_request = ros::Time::now();
+            last_request_time = ros::Time::now();
         } else {
             // Send arming command every 5s until success
             if (!current_state.armed &&
-                (ros::Time::now() - last_request > ros::Duration(5.0))) {
+                (ros::Time::now() - last_request_time > ros::Duration(5.0))) {
                 if (arming_client.call(arm_cmd) && arm_cmd.response.success) {
+                    arm_time = ros::Time::now();
                     armed = true;
                     ROS_INFO("Vehicle armed");
                 }
-                last_request = ros::Time::now();
+                last_request_time = ros::Time::now();
             }
         }
 
-        //if (armed && !airborne) {
-        //    // Send takeoff command
-        //    local_pos_pub.publish(goto_pos);
-        //    airborne = true;
-        //    ROS_INFO("Takeoff");
-        //} else {
-            if (armed && should_pursue()) {
-                ROS_INFO("Pursuing");
-                geometry_msgs::Point next_point = compute_next_pos(5.0, 5.0, 5.0);
-                goto_pos.pose.position = next_point;
 
-                local_pos_pub.publish(goto_pos);
+        // If 10 seconds has passed since arming, takeoff command should have already executed and completed
+        if (armed && (ros::Time::now() - arm_time > ros::Duration(10.0))) {
+            airborne = true;
+        }
 
-                last_pursue = ros::Time::now();
-            } else {
-                local_pos_pub.publish(goto_pos);
-            }
-        //}
+        if (should_pursue(last_pursue_time)) {
+            ROS_INFO("Pursuing");
+            // Compute next position as 3m forward, +/- 3m sideways, and same altitude
+            geometry_msgs::Point next_point = compute_next_pos(3.0, 3.0, current_pos.pose.position.z);
+            goto_pos.pose.position = next_point;
+
+            // Send movement command
+            local_pos_pub.publish(goto_pos);
+
+            last_pursue_time = ros::Time::now();
+        } else {
+            // If we're not pursuing, just feed the drone it's current position to keep it happy
+            local_pos_pub.publish(goto_pos);
+//            std::cout << "Current pos:" << std::endl;
+//            std::cout << current_pos.pose.position.x << " " << current_pos.pose.position.y << " " << current_pos.pose.position.z << std::endl;
+        }
         
 	    ros::spinOnce();
         rate.sleep();
