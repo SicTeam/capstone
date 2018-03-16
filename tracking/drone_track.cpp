@@ -37,6 +37,9 @@ Track::Track(std::string file_name)
     }
 
     cam2_detect = false; 
+    //these are set to default values for our ROS camera feeds center location
+    //XXX these would need to be changed or set to the correct center position 
+    //based on size of images.
     image_center.x = 400;
     image_center.y = 400;
 }
@@ -90,8 +93,8 @@ int Track::detect(std::vector<cv::Rect> & drones, cv::Mat frame)
 
     int size = drones.size();
     //std::cout << "Objects Detected: " << size << std::endl;
-
-    cv::Point center(drones[0].x + drones[0].width/2, drones[0].y + drones[0].height/2);
+    //if(size > 0)
+      cv::Point center(drones[0].x + drones[0].width/2, drones[0].y + drones[0].height/2);
     
     //set class target point to pass to pursuit
     //target = center;
@@ -685,10 +688,23 @@ void Track::display()
     std::cout << "-----------------------------------" << std::endl << std::endl;
     
 }
+
+void Track::normalize() //XXX might need to create this in ros_node or pass a signal for normalization
+{
+
+}
+/*XXX produced in ros_node.cpp
+void Track::pursuit()//TAKE TWO STRUCTS WITH IMAGES AND BBOX's FOR DRONES
+{
+   geometry_msgs::PoseWithCovariance sig;
+   sig.pose.position.x = depth(left_c, right_c);
+   
+}
+
+*/
 //Task: provides a depth to target drone 
 //Input: center points from the detected drone, from both L & R images
 //Output: integer value Z for estimated depth
-
 int Track::depth(cv::Point left, cv::Point right)
 {
    return abs(left.x - right.x);
@@ -697,7 +713,6 @@ int Track::depth(cv::Point left, cv::Point right)
 //Task: tranform image detection center into projected (x,y) value for drone movement
 //Input: the (x,y) values provided by the left image detection/tracking of proper target
 //Output: projected CV::Point object
-
 cv::Point Track::projectedXY(cv::Point drone_center)
 {
    //XXX for drone control inputs:
@@ -710,10 +725,10 @@ cv::Point Track::projectedXY(cv::Point drone_center)
    proj.y = image_center.y - drone_center.y;
    return proj;
 }
+
 //Task:
 //Input:
 //Output:
-
 int Track::track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & tracker)
 {
     std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
@@ -747,6 +762,7 @@ int Track::track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & track
     if(ok)
     {
         //Tracking success: draw tracked object
+        cv::Point center(drone.x + drone.width/2, drone.y + drone.height/2);
         rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
 	    return 1;
     }

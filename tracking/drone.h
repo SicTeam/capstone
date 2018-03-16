@@ -3,7 +3,8 @@
 
 
 #include <iostream>
-#include <cmath>
+#include <cmath>//abs
+#include <geometry_msgs/PoseWithCovariance.h>//post messages
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
 #include <opencv2/core/ocl.hpp>
