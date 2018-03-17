@@ -200,14 +200,19 @@ fi
 
 clone_dir=~/sicteam_src
 echo "Cloning to: $clone_dir."
-if [ -d "$clone_dir" ]
-then
+if [ -d "$clone_dir" ]; then
     echo "Code already cloned."
 else
     mkdir -p $clone_dir
     cd $clone_dir
     git clone https://github.com/SicTeam/Firmware.git
     git clone https://github.com/SicTeam/capstone.git
+fi
+
+if [ -d "$clone_dir/Firmware" ]; then
+    cd $clone_dir/Firmware
+    make px4fmu-v2_default
+    make clean
 fi
 
 
