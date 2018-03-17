@@ -1,30 +1,29 @@
-//This file will hold the inner workings of any tracking feature
+//Copyright <2018> <COPYRIGHT HOLDER>
 
+//Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+//This file will hold the inner workings of any tracking feature. The content we used in this file is taken from OpenCV library.
 
 #include "drone.h"
 
-
-
-//Task:
-//Input:
-//Output:
+//Track class constructor
 Track::Track()
 {
-    cascade_name = "sim_cascade.xml";
+    //cascade_name = "cascade.xml"; // name of training data in Real Life
+    cascade_name = "sim_cascade.xml"; //name of training data in Simulation
     min_neighbors = 15; //the higher this number the more strict detection is
-    //cascade_name = "cascade.xml";
     if(!cascade.load(cascade_name))
     {
         std::cout << "FAIL" << std::endl;
     }
-    //cam2_detect = false; 
 }
 
-
-
-//Task:
-//Input:
-//Output:
+//Track class constructor but let user to choose data training file
+//use for testing purpose if needed
 Track::Track(std::string file_name)
 {
     min_neighbors = 3;//the higher this number the more strict detection is
@@ -33,30 +32,25 @@ Track::Track(std::string file_name)
     {
         std::cout << "FAIL" << std::endl;
     }
-
-    cam2_detect = false; 
 }
 
-
-
 //Task: Detects drone from test images
-//Input:
-//Output:
+//Input: any image with or without the drone
+//Output: a bounding box on the drone position
 int Track::detect_image(std::string image)
 {
-    //cv::VideoCapture video("test/Video_1.avi");
-    std::vector<cv::Rect> drones;
-    cv::Mat frame;
+    std::vector<cv::Rect> drones; //list of drones
+    cv::Mat frame; // hold the image
 
-    //video >> frame;
-    frame = cv::imread( image, cv::IMREAD_COLOR);
+    frame = cv::imread( image, cv::IMREAD_COLOR);//read image
 
+    //return error if can't find drone
     if(!detect(drones, frame))
     {
         std::cout << "No object Detected" << std::endl;
         return 0;
     }
-
+    //display info
     cv::namedWindow("Drone Detect", cv::WINDOW_AUTOSIZE);
     cv::imshow("Drone Detect", frame);
     cv::waitKey(0);
@@ -69,8 +63,9 @@ int Track::detect_image(std::string image)
 //Output: Outputs how many drones were detected, zero means fail
 int Track::detect(std::vector<cv::Rect> & drones, cv::Mat frame)
 {
-    cv::Mat frame_gray;
+    cv::Mat frame_gray;//hold the image
 
+    //data for detection
     cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
     cv::equalizeHist(frame_gray, frame_gray);
 
@@ -97,16 +92,19 @@ int Track::detect(std::vector<cv::Rect> & drones, cv::Mat frame)
 //    {
 //        rectangle(frame, drones[i], cv::Scalar(225,0,0),2,8);
 //    }
+    //show the drone that will be tracked
     rectangle(frame, drones[0], cv::Scalar(225,0,0),2,8);
     circle(frame, center, 1, cv::Scalar(0,0,225), 2, 1, 0);
 
     return 1;
 }
 
-
+//Task:   bound a tracker object with a tracker type
+//Input:  a tracker object, string name of tracker type
+//Output: bounded tracker object with the inputed type
 void Track::createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trackerType) 
 {
-
+   
     #if (CV_MINOR_VERSION < 3)
         tracker = cv::Tracker::create(trackerType);
     #else
@@ -121,7 +119,6 @@ void Track::createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trac
         if (trackerType == "MEDIANFLOW")
             tracker = cv::TrackerMedianFlow::create();
     #endif
- 
 }
 
 //XXX No tracking failure so it doesn't detect
@@ -172,7 +169,7 @@ int Track::kcf(char * vid)
     cv::Point center(drones[0].x + drones[0].width/2, drones[0].y + drones[0].height/2);
     target_point = center;
     target = drones[0];
-    display();
+    //display();
     //***************************************
     
     while(video.read(frame)) 
@@ -664,55 +661,38 @@ int Track::kcf()
     
     return 0;
 }
-
-
-
-//Task:
-//Input:
-//Output:
-void Track::display()
-{
-    std::cout << "\n-----Tracking Location data-----" << std::endl;
-    std::cout << "Coordinate X: " << target.x << std::endl;
-    std::cout << "Coordinate Y: " << target.y << std::endl;
-    std::cout << "Width: " << target.width << std::endl;
-    std::cout << "Height: " << target.height << std::endl << std::endl;
-    std::cout << "Point Center: (" << target_point.x << ", " << target_point.y << ")" << std::endl;
-    std::cout << "-----------------------------------" << std::endl << std::endl;
-    
-}
-
-
+//Task:   track a detected drone
+//Input:  a frame hold images, list of drone, a tracker object
+//Output: keep updating the location of detected drone
 int Track::track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & tracker)
 {
+    //define and assigned tracker type
     std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
     std::string trackerType = trackerTypes[4];
 	 
     //tracker init
     cv::Rect2d bbox = drone;
-    //cv::Rect2d origin_box;
     bool trackFail = false;
     bool cond = true; // to signal if the left camera still running
     bool ok = false;
 
+    //bound tracker
     if(!tracker)
     {
     	createTracker(tracker, trackerType);
-	    //tracker->init(frame, drone);
-        //rectangle(frame, drone, cv::Scalar(225, 0, 0), 2, 1);
     }
  
-    //bbox = drone;
-    //origin_box.x = bbox.x ; origin_box.y = bbox.y; origin_box.width = bbox.width; origin_box.height = bbox.height; 
+    //draw a bounding box
     rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
+    //XXX why we init every single time ? 
+    //init tracker to frame and bounding box 
     tracker->init(frame, bbox);
-
+    //update
     ok = tracker->update(frame, bbox);
-    
+   
+    //if the target move near the box, don't draw the bounding box 
     if(bbox.x < 50 || bbox.x > (frame.rows - 50) || bbox.y < 50 || bbox.y > (frame.cols - 50))
 		ok = false;
-
-
     if(ok)
     {
         //Tracking success: draw tracked object
@@ -723,18 +703,23 @@ int Track::track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & track
     return 0;
 } 
 
+//Task: test for the trackers
+//Input: a video live stream or recorded video, draw object to be tracked
+//Output: the tracker moving the bounding box along with target movement
 int Track::track_tester(char * vid)
 {
+    //define and assing tracker type
     std::string trackerTypes[5] = {"BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW"};
     std::string trackerType = trackerTypes[4];
-    std::vector<cv::Rect> drones;
-    cv::Ptr<cv::Tracker> tracker;
+
+    std::vector<cv::Rect> drones;// list of drones
+    cv::Ptr<cv::Tracker> tracker;//create a tracker object
     cv::Mat frame; //holds video frame
-    cv::Rect2d bbox;
+    cv::Rect2d bbox;//create bounding box
     
-    createTracker(tracker, trackerType);
+    createTracker(tracker, trackerType);//bound tracker
 
-
+    //choose which type of video to show
     #if (vid == NULL)
     	cv::VideoCapture video(0);
     #else
@@ -751,9 +736,12 @@ int Track::track_tester(char * vid)
     //take first frame
     video >> frame;
 
+    //draw a region of interest to track
     bbox = selectROI(frame,false);
-
+ 
+    //draw an actual box on screen
     rectangle(frame, bbox, cv::Scalar(225, 0, 0), 2, 1);
+    //init tracker
     tracker->init(frame, bbox);
 
     while(video.read(frame)) 
@@ -769,6 +757,7 @@ int Track::track_tester(char * vid)
 
         else
         {
+	    //show user tracking failure
             cv::putText(frame, "Tracking Failure Detected", cv::Point(100, 80), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,225),2);
         }
 
