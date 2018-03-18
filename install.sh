@@ -176,6 +176,8 @@ else
     git clone https://github.com/SicTeam/capstone.git
 fi
 
+cp $clone_dir/capstone/tracking/cascade.xml $HOME
+
 cd $HOME
 sudo apt-get install espeak libespeak-dev libudev-dev libsdl2-dev -y
 wget https://s3-us-west-2.amazonaws.com/qgroundcontrol/latest/QGroundControl.AppImage
