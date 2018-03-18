@@ -1,7 +1,3 @@
-# common_deps + nuttx + ros_gazebo needed
-
-#common_deps
-
 #!/bin/bash
 
 ##Bash script for setting up a PX4 development environment on Ubuntu LTS (16.04).
@@ -16,7 +12,6 @@
 trap "exit" INT TERM; trap "kill 0" EXIT; sudo -v || exit $?; sleep 1; while true; do sleep 60; sudo -nv; done 2>/dev/null &
 
 # Ubuntu Config
-echo "We must first remove modemmanager"
 sudo apt-get remove modemmanager -y
 
 
@@ -57,19 +52,6 @@ fi
 echo "Installing jMAVSim simulator dependencies"
 sudo apt-get install ant openjdk-8-jdk openjdk-8-jre -y
 
-# Clone PX4/Firmware
-#clone_dir=~/src
-#echo "Cloning PX4 to: $clone_dir."
-#if [ -d "$clone_dir" ]
-#then
-#    echo " Firmware already cloned."
-#else
-#    mkdir -p $clone_dir
-#    cd $clone_dir
-#    git clone https://github.com/PX4/Firmware.git
-#fi
-
-----------------------------------------------------------------------------
 #NUTTX
 
 ## Set up a PX4 development environment for Pixhawk/NuttX targets on Ubuntu LTS (16.04).
@@ -77,15 +59,6 @@ sudo apt-get install ant openjdk-8-jdk openjdk-8-jre -y
 ##
 ## Installs:
 ## - NuttX toolchain (i.e. gcc compiler)
-
-#echo "Downloading dependent script 'ubuntu_sim.sh'"
-# Source the ubuntu_sim.sh script directly from github
-#ubuntu_sim=$(wget https://raw.githubusercontent.com/PX4/Devguide/master/build_scripts/ubuntu_sim.sh -O -)
-#wget_return_code=$?
-# If there was an error downloading the dependent script, we must warn the user and exit at this point.
-#if [[ $wget_return_code -ne 0 ]]; then echo "Error downloading 'ubuntu_sim.sh'. Sorry but I cannot proceed further :("; exit 1; fi
-# Otherwise source the downloaded script.
-#. <(echo "${ubuntu_sim}")
 
 # NuttX
 sudo apt-get install python-serial openocd \
@@ -114,30 +87,12 @@ else
     popd
 fi
 
-
-# Go to the firmware directory
-#cd $clone_dir/Firmware
-
-#Reboot the computer (required before building)
-
--------------------------------------------------------------------------------
-#ROS_GAZEBO
-
 ## Setting up a ROS/Gazebo development environment for PX4 on Ubuntu LTS (16.04). 
 ## It installs the common dependencies for all targets (including Qt Creator) and the ROS Kinetic/Gazebo 7 (the default).
 ##
 ## Installs:
 ## - ROS Kinetic (including Gazebo7)
 ## - MAVROS
-
-#echo "Downloading dependent script 'ubuntu_sim_common_deps.sh'"
-# Source the ubuntu_sim_common_deps.sh script directly from github
-#common_deps=$(wget https://raw.githubusercontent.com/PX4/Devguide/master/build_scripts/ubuntu_sim_common_deps.sh -O -)
-#wget_return_code=$?
-# If there was an error downloading the dependent script, we must warn the user and exit at this point.
-#if [[ $wget_return_code -ne 0 ]]; then echo "Error downloading 'ubuntu_sim_common_deps.sh'. Sorry but I cannot proceed further :("; exit 1; fi
-# Otherwise source the downloaded script.
-#. <(echo "${common_deps}")
 
 # ROS Kinetic/Gazebo (ROS Kinetic includes Gazebo7 by default)
 ## Gazebo simulator dependencies
@@ -222,13 +177,3 @@ wget https://s3-us-west-2.amazonaws.com/qgroundcontrol/latest/QGroundControl.App
 chmod +x QGroundControl.AppImage
 
 echo "RESTART YOUR COMPUTER to complete installation of PX4 development toolchain"
-
-
-# Go to the firmware directory
-#cd $clone_dir/Firmware
-
-#if [[ ! -z $unsupported_os ]]; then
-#    >&2 echo -e "\033[31mYour OS ($unsupported_os) is unsupported. Assumed an Ubuntu 16.04 installation,"
-#    >&2 echo -e "and continued with the installation, but if things are not working as"
-#    >&2 echo -e "expected you have been warned."
-#fi
