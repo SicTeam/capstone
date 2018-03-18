@@ -52,6 +52,18 @@ fi
 echo "Installing jMAVSim simulator dependencies"
 sudo apt-get install ant openjdk-8-jdk openjdk-8-jre -y
 
+# Clone PX4/Firmware
+px4_dir=~/src
+echo "Cloning PX4 to: $px4_dir."
+if [ -d "$px4_dir" ]
+then
+    echo " Firmware already cloned."
+else
+    mkdir -p $px4_dir
+    cd $px4_dir
+    git clone https://github.com/PX4/Firmware.git
+fi
+
 #NUTTX
 
 ## Set up a PX4 development environment for Pixhawk/NuttX targets on Ubuntu LTS (16.04).
@@ -150,7 +162,7 @@ else echo "$catkin_ws_source" >> ~/.bashrc; fi
 eval $catkin_ws_source
 
 if [ -f $HOME/catkin_ws/src/mavros/mavros/scripts/install_geographiclib_datasets.sh ]; then 
-    sudo sh $HOME/catkin_ws/src/mavros/mavros/scripts/install_geographiclib_datasets.sh
+    sudo bash $HOME/catkin_ws/src/mavros/mavros/scripts/install_geographiclib_datasets.sh
 fi
 
 clone_dir=~/sicteam_src
@@ -163,13 +175,6 @@ else
     git clone https://github.com/SicTeam/Firmware.git
     git clone https://github.com/SicTeam/capstone.git
 fi
-
-if [ -d "$clone_dir/Firmware" ]; then
-    cd $clone_dir/Firmware
-    make px4fmu-v2_default
-    make clean
-fi
-
 
 cd $HOME
 sudo apt-get install espeak libespeak-dev libudev-dev libsdl2-dev -y
