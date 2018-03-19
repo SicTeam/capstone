@@ -41,3 +41,6 @@ cmake files in order to make the module more portable.
 
 Work in progress. Plans are to use Cmake's CTest in order to provide an automated
 testing suite.
+
+## ROS Node ##
+After installing a full ROS toolchain, navigate to the ros/ directory and run `catkin_make` to build the code. Then `source devel/setup.bash` to allow ROS to find the code. Then `rosrun sd5 sd5_node` to run the node on an already-running ROS system contatining a drone in the namespace sd5_1/.
