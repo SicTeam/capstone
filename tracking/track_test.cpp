@@ -26,39 +26,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 */
+#include "drone.h"
 
-#include <iostream>
-#include <opencv2/opencv.hpp>
-#include <opencv2/tracking.hpp>
-#include <opencv2/core/ocl.hpp>
-#include <opencv2/objdetect.hpp>
-#include <opencv2/videoio.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+int main(int argc, char ** argv)
 
-// Convert to string
-#define SSTR( x ) static_cast< std::ostringstream & >( \
-        ( std::ostringstream() << std::dec << x ) ).str()
-
-//Task:
-class Track
 {
-    public:
-        Track();  	//constructor	
-        Track(std::string file_name); //constructor
-    	int detect_image(std::string image); //detect in a single image
-        int detect(std::vector<cv::Rect> & drones, cv::Mat frame); //detect in a video
-	int track(cv::Mat & frame, cv::Rect & drone, cv::Ptr<cv::Tracker> & tracker); //tracking functin
-	int track_tester(); //test function for track
-	int track_tester(char * vid); //test function for track
-
-    private:
-        void createTracker(cv::Ptr<cv::Tracker>& tracker, const std::string& trackerType);//bound the tracker object with tracker type
-        
-        cv::CascadeClassifier cascade; //holder for training data
-        std::string cascade_name; //name of training data
-        int min_neighbors; //used for detection algorithm
-
-	cv::Rect target;
-        cv::Point target_point;
-};
+    Track drone_track;
+    if(argc > 1)
+    	drone_track.track_tester(argv[1]);
+    else
+	drone_track.track_tester();
+    return 0;
+}
