@@ -174,6 +174,7 @@ else
     cd $clone_dir
     git clone https://github.com/SicTeam/Firmware.git
     git clone https://github.com/SicTeam/capstone.git
+    git clone https://github.com/SicTeam/data_generator.git
 fi
 
 cp $clone_dir/capstone/tracking/cascade.xml $HOME
